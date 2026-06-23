@@ -5,6 +5,7 @@
 ## Knowledge
 - [Interoperability & integration](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/interoperability.md): FHIR, HL7, CCD/Direct, CommonWell, Carequality, X12 5010, and CureMD's certifications — the integration core.
 - [FHIR API explainer](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/fhir-explainer.md): plain-English guide to what the CureMD FHIR API is, that it is read-only, and the free patient-facing vs. paid clinician/backend access models.
+- [FHIR API developer quick reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/fhir-api-reference.md): the concrete spec — supported US Core resources, SMART STU2 + PKCE auth flow, scopes, registration, rate limit, bulk export.
 - [Products & platform](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/products.md): EHR, Practice Management, Leap Health patient portal, Avalon mobile, CureLINK labs, data migration.
 - [Compliance, support & legal](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/compliance-support-legal.md): ONC certification, HIPAA posture, License & Services Agreement, Business Associate Addendum, mandatory cost disclosure, sub-processors.
 - [Pricing, company & resources](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/pricing-company-resources.md): pricing model, company facts, awards, whitepaper catalog.
@@ -15,6 +16,7 @@
 
 ## Skills
 - [curemd-integration](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/SKILL.md): how to build, scope, or debug an integration with CureMD (channel selection, first moves, what not to do).
+- [curemd-fhir-client](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-fhir-client/SKILL.md): how to build a client against the CureMD FHIR API — SMART App Launch STU2 flow, scopes, base-URL discovery, which standard libraries to use, with code.
 - [curemd-integration: FHIR reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/references/fhir.md): authorization, USCDI resources, read-only scopes, how to get access.
 - [curemd-integration: channels reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/references/channels.md): the non-FHIR channels (HL7 v2/CureLINK, CCD/Direct, CommonWell/Carequality, X12 5010).
 - [curemd-integration: compliance & security reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/references/compliance-security.md): Business Associate Agreement, HIPAA obligations, consent model.

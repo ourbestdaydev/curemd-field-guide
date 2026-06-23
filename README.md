@@ -62,6 +62,7 @@ Reference notes, each compiled from CureMD's public site, certification disclosu
 - `link-map.md` — start here; a navigable map of every public CureMD source and the files in this folder.
 - `interoperability.md` — the integration core: FHIR / HL7 / CCD / CommonWell / Carequality / certifications.
 - `fhir-explainer.md` — a plain-English explainer of what the FHIR API is, what it can and cannot do, and what "getting access" really means.
+- `fhir-api-reference.md` — a developer quick reference: supported US Core resources, the SMART STU2 + PKCE auth flow, scopes, registration, rate limits, and bulk export.
 - `products.md` — the product suite (EHR, Practice Management, Leap Health portal, Avalon mobile, CureLINK labs, data migration).
 - `compliance-support-legal.md` — ONC certification, HIPAA posture, License & Services Agreement and Business Associate Addendum, support contacts, sub-processors.
 - `pricing-company-resources.md` — pricing facts, company facts, awards, and the whitepaper catalog.
@@ -72,6 +73,7 @@ Reference notes, each compiled from CureMD's public site, certification disclosu
 ### `skills/`
 The skills capture *how to act* on the knowledge above:
 - `curemd-integration/` — how to build, scope, or debug an integration with CureMD; includes references for the FHIR API, the non-FHIR channels, and compliance/security.
+- `curemd-fhir-client/` — how to build a working client against the CureMD FHIR API: the SMART App Launch (STU2) flow, scopes, base-URL discovery, which standard libraries to use, and example code.
 - `curemd-optimization/` — how to help an organization that already runs CureMD get more value out of it (underused features, workflow friction, adoption, switched-off capabilities).
 - `curemd-patient-portal/` — what CureMD's patient-facing layer ("Leap Health") and AI engagement systems do, and how an application should complement rather than rebuild them.
 

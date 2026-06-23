@@ -1,0 +1,58 @@
+---
+---
+# CureMD FHIR API — Developer Quick Reference
+
+> A structured, vendor-neutral summary of CureMD's published FHIR API documentation (`https://www.curemd.com/developer/fhir-apis.pdf`), distilled into the facts a developer or AI agent needs to build against it. This is our own summary of publicly documented facts — for the authoritative source, read CureMD's PDF. For the plain-English version, see [`fhir-explainer.md`](fhir-explainer.md).
+
+## At a glance
+| Property | Value |
+|---|---|
+| FHIR version | Release 4 (R4) |
+| Profiles | US Core 3.1.1 / USCDI v1 |
+| Authorization | SMART App Launch **STU2 (v2.0.0)**, OAuth 2.0 + OpenID Connect |
+| PKCE | **Mandatory** for all user-facing flows (`code_challenge_method=S256`), public *and* confidential clients |
+| Access | **Read / search only** — no create/update/delete |
+| Rate limit | 20 requests/minute (1,200/hour) per client; HTTP 429 over the limit |
+| Base URL | **Per tenant/practice** — issued at registration; not a single fixed production URL |
+| Bulk data | Supports an export/polling flow with a stated data-synchronization frequency |
+| Cost | Patient-facing apps reading a patient's own data: free. Clinician/backend: signed business agreement with the practice + additional cost. |
+
+## Registration (how you get credentials)
+There is **no self-service developer portal**. You register by emailing **support@curemd.com** with:
+1. Application name; 2. App homepage URL; 3. Privacy-policy URL; 4. Terms-of-service URL; 5. OAuth redirect URL(s); 6. Web app launch URL; 7. Application type (**provider-facing** or **patient-facing**); 8. Requested SMART scopes (e.g. `patient/Condition.read`); 9. Supported OS (Web/iOS/Android); 10. App descriptions/icon; 11. Categories (audience, use, confidentiality, privacy/security compliance — HIPAA / ONC Model Privacy Notice); 12. Attestation (confidential clients must attest they can store a secret).
+
+CureMD's support team returns the credentials and the tenant base URL after approval.
+
+## Authentication flow (SMART App Launch STU2)
+1. **Discovery** — `GET [base-url]/.well-known/smart-configuration` → extract `authorization_endpoint`, `token_endpoint`, `jwks_uri`.
+2. **Client type** —
+   - **Confidential** (server-side, can hold a secret): may share a **JWKS URL** at registration for asymmetric (private-key JWT) authentication.
+   - **Public** (browser SPA, mobile): relies on PKCE.
+3. **Launch contexts** — EHR launch (provider-facing, launched from within CureMD, carries a `launch` token), standalone launch, and backend/system-to-system. Confirm the exact set for your app with CureMD.
+4. **Authorization request** — redirect to `authorization_endpoint` with `response_type=code`, `client_id`, `redirect_uri`, `scope` (e.g. `launch openid fhirUser patient/Patient.rs`), `state`, `aud={fhir_base_url}`, `code_challenge`, `code_challenge_method=S256`, and (for EHR launch) the `launch` token.
+5. **Token exchange** — `POST [token_endpoint]` with `grant_type=authorization_code`, the `code`, `redirect_uri`, and client authentication via **either** a JWKS-signed client assertion (`client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer`) **or** a client secret.
+
+## Scopes
+SMART v2 scope syntax, **read/search only**. Examples: `patient/Patient.rs`, `patient/Condition.read`, `patient/Observation.rs`, plus `launch`, `openid`, `fhirUser`, `offline_access`. There are no write (`.c`/`.u`/`.d`) scopes — the API does not write.
+
+## Supported resources (US Core / USCDI v1)
+Confirmed from the documentation's resource list:
+- **Patient**
+- **Observation** — Body Height, Body Weight, Body Temperature, Blood Pressure, Heart Rate, Respiratory Rate, Smoking Status, Pulse Oximetry, Pediatric BMI-for-Age, Pediatric Head Occipital-frontal Circumference Percentile, Pediatric Weight-for-Height, Laboratory Result, Clinical Result, Occupation, and social-history profiles (Alcohol, Drug, Sexual, Education, Sleep, Diet, Exercise, Tanning, Travel History), Pregnancy Status, Pregnancy Intent, Sexual Orientation, Screening Assessments (assessment forms, custom forms, evaluations)
+- **Practitioner** & **PractitionerRole** (practice provider + referring provider variants)
+- **Endpoint** (practice + Direct address)
+- **AllergyIntolerance**, **Procedure**, **Encounter**, **CarePlan**, **Goal**, **CareTeam**, **Condition** (problems/health concerns, encounter diagnosis, pregnancy status)
+- **Organization** (practice, payer, pharmacy), **Location**, **Device**, **Media**, **Provenance**
+- **DocumentReference** (clinical note documents + result attachments)
+- **DiagnosticReport** (laboratory results + report/note exchange)
+- …and additional US Core resources documented further in the spec (e.g. medications, immunizations) — verify the full set in CureMD's PDF for your use case.
+
+## Errors & bulk data
+- The documentation includes an **Errors and Exceptions** section (handle standard FHIR `OperationOutcome` responses and HTTP 429 for rate limiting).
+- A **bulk export** path exists with **export content polling** and a stated **data-synchronization frequency** — relevant for population-level reads, subject to the same read-only constraint.
+
+## Practical notes
+- Don't hardcode a base URL — it is per-tenant; always run discovery against the base URL CureMD issues you.
+- Respect the 20 req/min limit; back off on HTTP 429.
+- This is **read-only**: any write-back (creating/updating records) must use a different channel — see [`interoperability.md`](interoperability.md) (HL7 v2 / CureLINK, CCD/Direct, X12).
+- Authoritative source for fields, search parameters, and examples: CureMD's PDF at `https://www.curemd.com/developer/fhir-apis.pdf`.
