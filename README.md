@@ -69,6 +69,7 @@ Reference notes, each compiled from CureMD's public site, certification disclosu
 - `pricing-company-resources.md` — pricing facts, company facts, awards, and the whitepaper catalog.
 - `blog.md` — a map of the CureMD blog and the durable product facts mined from it (by theme: intake, documentation incl. Discrete Reportable Transcription, reporting dashboards) plus CureMD's AI product direction.
 - `case-studies.md` — CureMD's published customer case studies and success stories, with an honest breakdown of which outcome metrics are named-client vs. anonymized, and what they actually reveal.
+- `optimization-playbook.md` — candidate ways to get more value from CureMD across registration, documentation, and reporting, each tagged by lever (switch-on / configure / adopt / buy), plus the AI-product angle.
 - `sitemap.md` / `sitemap-raw-urls.txt` — the full bucketed list of CureMD marketing-site URLs.
 
 ### `skills/`

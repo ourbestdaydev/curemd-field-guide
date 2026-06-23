@@ -12,6 +12,7 @@
 - [Pricing, company & resources](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/pricing-company-resources.md): pricing model, company facts, awards, whitepaper catalog.
 - [Blog map & deep dive](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/blog.md): durable product facts mined from CureMD's blog, organized by theme (intake, documentation incl. DRT, reporting dashboards) plus the AI product direction.
 - [Case studies](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/case-studies.md): CureMD's published customer case studies and success stories, with an honest named-vs-anonymized breakdown of the vendor-asserted metrics.
+- [Optimization playbook](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/optimization-playbook.md): candidate ways to get more value from CureMD across registration, documentation, and reporting — each tagged switch-on / configure / adopt / buy, with the AI-product angle.
 - [Link map](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/link-map.md): navigable map of every public CureMD source and the files here.
 - [Sitemap](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/sitemap.md): bucketed list of CureMD marketing-site URLs.
 
