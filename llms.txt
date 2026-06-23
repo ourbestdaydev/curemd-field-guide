@@ -1,0 +1,29 @@
+# CureMD Field Guide
+
+> Unofficial documentation, FHIR API reference, and AI-assistant skills for the CureMD electronic health record (EHR/EMR). Compiled from CureMD's public documentation and its Office of the National Coordinator certification record. Key facts: CureMD has a public, read-only FHIR API (Release 4 / US Core 3.1.1 / USCDI v1, SMART App Launch STU2 + PKCE); patient-facing access is free while clinician/backend access is paid; write-back uses HL7 v2 / CCD / X12, not FHIR.
+
+## Knowledge
+- [Interoperability & integration](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/interoperability.md): FHIR, HL7, CCD/Direct, CommonWell, Carequality, X12 5010, and CureMD's certifications — the integration core.
+- [FHIR API explainer](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/fhir-explainer.md): plain-English guide to what the CureMD FHIR API is, that it is read-only, and the free patient-facing vs. paid clinician/backend access models.
+- [Products & platform](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/products.md): EHR, Practice Management, Leap Health patient portal, Avalon mobile, CureLINK labs, data migration.
+- [Compliance, support & legal](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/compliance-support-legal.md): ONC certification, HIPAA posture, License & Services Agreement, Business Associate Addendum, mandatory cost disclosure, sub-processors.
+- [Pricing, company & resources](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/pricing-company-resources.md): pricing model, company facts, awards, whitepaper catalog.
+- [Blog map](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/blog.md): durable product facts mined from CureMD's blog.
+- [Link map](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/link-map.md): navigable map of every public CureMD source and the files here.
+- [Sitemap](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/sitemap.md): bucketed list of CureMD marketing-site URLs.
+
+## Skills
+- [curemd-integration](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/SKILL.md): how to build, scope, or debug an integration with CureMD (channel selection, first moves, what not to do).
+- [curemd-integration: FHIR reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/references/fhir.md): authorization, USCDI resources, read-only scopes, how to get access.
+- [curemd-integration: channels reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/references/channels.md): the non-FHIR channels (HL7 v2/CureLINK, CCD/Direct, CommonWell/Carequality, X12 5010).
+- [curemd-integration: compliance & security reference](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-integration/references/compliance-security.md): Business Associate Agreement, HIPAA obligations, consent model.
+- [curemd-optimization](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-optimization/SKILL.md): how an organization already running CureMD can get more value from it.
+- [curemd-patient-portal](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/skills/curemd-patient-portal/SKILL.md): what Leap Health and CureMD's AI engagement systems do.
+
+## Agents
+- [curemd-integration-researcher](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/agents/curemd-integration-researcher.md): answers a CureMD capability question with sourced fact vs. inference.
+- [curemd-fhir-mapper](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/agents/curemd-fhir-mapper.md): turns a clinical-data need into a FHIR resource map, channel, and compliance plan.
+
+## Optional
+- [README](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/README.md): overview, disclaimer, headline facts, and frequently asked questions.
+- [License: CC BY 4.0](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/LICENSE): reuse terms (attribution required).
