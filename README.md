@@ -65,7 +65,8 @@ Reference notes, each compiled from CureMD's public site, certification disclosu
 - `products.md` — the product suite (EHR, Practice Management, Leap Health portal, Avalon mobile, CureLINK labs, data migration).
 - `compliance-support-legal.md` — ONC certification, HIPAA posture, License & Services Agreement and Business Associate Addendum, support contacts, sub-processors.
 - `pricing-company-resources.md` — pricing facts, company facts, awards, and the whitepaper catalog.
-- `blog.md` — a map of the CureMD blog and the durable product facts mined from it.
+- `blog.md` — a map of the CureMD blog and the durable product facts mined from it (by theme: intake, documentation incl. Discrete Reportable Transcription, reporting dashboards) plus CureMD's AI product direction.
+- `case-studies.md` — CureMD's published customer case studies and success stories, with an honest breakdown of which outcome metrics are named-client vs. anonymized, and what they actually reveal.
 - `sitemap.md` / `sitemap-raw-urls.txt` — the full bucketed list of CureMD marketing-site URLs.
 
 ### `skills/`
