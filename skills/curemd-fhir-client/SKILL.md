@@ -27,6 +27,11 @@ FHIR here is **read/search only**. If you need to *write* into CureMD, stop — 
 
 Add `@types/fhir` for typed R4 resources. Don't write your own OAuth2/PKCE/token-refresh — these libraries implement the SMART spec CureMD follows.
 
+**Libraries (all open source):**
+- **`fhirclient`** — the SMART on FHIR JavaScript client, written by **SMART Health IT** (the authors of the SMART App Launch standard CureMD implements). Repo `github.com/smart-on-fhir/client-js`; **Apache-2.0**. Handles launch, PKCE, token exchange/refresh.
+- **`fhir-kit-client`** — Node.js FHIR REST client. Repo `github.com/Vermonster/fhir-kit-client`; **MIT**.
+- **`@types/fhir`** — FHIR R4 TypeScript types (DefinitelyTyped); **MIT**.
+
 ## Step 2 — register the app (no self-service portal)
 Email **support@curemd.com** with: app name, homepage, privacy-policy and terms URLs, OAuth redirect URL(s), launch URL, **app type (patient-facing vs provider-facing)**, requested scopes, OS, descriptions, categories, and a confidential-client attestation. CureMD returns credentials and your **tenant base URL**. (Patient-facing = free; provider/backend = paid + a business agreement with the practice.)
 

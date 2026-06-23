@@ -55,7 +55,7 @@ const RESOURCES = [
   { name: "Appointment", search: ["date", "status"] },
 ];
 
-const commonSearch = ["_id", "_lastUpdated", "_count"];
+const commonSearch = ["_id", "_lastUpdated", "_count", "_revinclude"];
 
 const scopeForRead = (r) => `patient/${r}.rs`;
 
@@ -79,6 +79,7 @@ const paths = {
       security: [{}],
       responses: {
         200: { description: "CapabilityStatement", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/FhirResource" } } } },
+        "4XX": { $ref: "#/components/responses/ClientError" },
       },
     },
   },
@@ -100,6 +101,7 @@ const paths = {
             code_challenge_methods_supported: { type: "array", items: { type: "string" }, description: "Includes S256 (PKCE is mandatory)." },
           } } } },
         },
+        "4XX": { $ref: "#/components/responses/ClientError" },
       },
     },
   },
@@ -131,14 +133,19 @@ for (const r of RESOURCES) {
       parameters: [{ $ref: "#/components/parameters/idPath" }],
       responses: {
         200: { description: `A ${r.name} resource (US Core 3.1.1)`, content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/FhirResource" } } } },
-        401: errorResponse("Unauthorized"), 403: errorResponse("Forbidden"), 404: errorResponse("NotFound"), 429: errorResponse("RateLimited"),
+        401: errorResponse("Unauthorized"), 403: errorResponse("Forbidden"), 404: errorResponse("NotFound"), 429: errorResponse("RateLimited"), 500: errorResponse("ServerError"), 503: errorResponse("ServiceUnavailable"),
       },
     },
   };
   // search
   const params = [];
-  if (r.patientScoped !== false) params.push({ name: "patient", in: "query", schema: { type: "string" }, description: "Patient reference / id to scope the search." });
-  for (const p of [...r.search, ...commonSearch]) params.push({ name: p, in: "query", schema: { type: "string" } });
+  const seenParams = new Set();
+  if (r.patientScoped !== false) { params.push({ name: "patient", in: "query", schema: { type: "string" }, description: "Patient reference / id to scope the search." }); seenParams.add("patient"); }
+  for (const p of [...r.search, ...commonSearch]) {
+    if (seenParams.has(p)) continue;
+    seenParams.add(p);
+    params.push({ name: p, in: "query", schema: { type: "string" } });
+  }
   paths[`/${r.name}`] = {
     get: {
       tags: [r.name],
@@ -148,7 +155,7 @@ for (const r of RESOURCES) {
       parameters: params,
       responses: {
         200: { description: `A searchset Bundle of ${r.name} resources`, content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/Bundle" } } } },
-        401: errorResponse("Unauthorized"), 403: errorResponse("Forbidden"), 429: errorResponse("RateLimited"),
+        400: errorResponse("BadRequest"), 401: errorResponse("Unauthorized"), 403: errorResponse("Forbidden"), 429: errorResponse("RateLimited"), 500: errorResponse("ServerError"), 503: errorResponse("ServiceUnavailable"),
       },
     },
   };
@@ -200,7 +207,7 @@ const spec = {
     securitySchemes: {
       smartOnFhir: {
         type: "oauth2",
-        description: "SMART App Launch STU2. PKCE (code_challenge_method=S256) is mandatory. authorizationUrl/tokenUrl below are placeholders — discover the real values via GET {baseUrl}/.well-known/smart-configuration.",
+        description: "SMART App Launch STU2. PKCE (code_challenge_method=S256) is mandatory. Scopes are read/search only (.rs). Granular scopes are supported, e.g. patient/Observation.rs?category=laboratory. authorizationUrl/tokenUrl below are placeholders — discover the real values via GET {baseUrl}/.well-known/smart-configuration.",
         flows: {
           authorizationCode: {
             authorizationUrl: "https://example.curemd.com/authorize",
@@ -246,10 +253,14 @@ const spec = {
       },
     },
     responses: {
-      Unauthorized: { description: "Missing or invalid access token.", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      ClientError: { description: "Client error (FHIR OperationOutcome).", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      BadRequest: { description: "Malformed request, bad/unsupported search parameters, or structural issue (OperationOutcome issue.code = invalid/structure/value).", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      Unauthorized: { description: "Missing or invalid access token (WWW-Authenticate header).", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
       Forbidden: { description: "Token lacks the required scope, or access is not permitted for this tenant/patient.", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
-      NotFound: { description: "Resource not found.", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
-      RateLimited: { description: "Rate limit exceeded (20 requests/minute per client). Back off and retry.", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      NotFound: { description: "Resource not found (OperationOutcome issue.code = not-found).", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      RateLimited: { description: "Rate limit exceeded — 20 requests/minute (1,200/hour) per client. Back off and retry.", headers: { "Retry-After": { description: "Seconds to wait before retrying.", schema: { type: "integer" } } }, content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      ServerError: { description: "Unexpected server error (OperationOutcome issue.severity = error).", content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
+      ServiceUnavailable: { description: "Server maintenance or dependency outage; may include a Retry-After header.", headers: { "Retry-After": { description: "Seconds to wait before retrying.", schema: { type: "integer" } } }, content: { "application/fhir+json": { schema: { $ref: "#/components/schemas/OperationOutcome" } } } },
     },
   },
 };

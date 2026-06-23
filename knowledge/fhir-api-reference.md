@@ -35,7 +35,12 @@ CureMD's support team returns the credentials and the tenant base URL after appr
 5. **Token exchange** — `POST [token_endpoint]` with `grant_type=authorization_code`, the `code`, `redirect_uri`, and client authentication via **either** a JWKS-signed client assertion (`client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer`) **or** a client secret.
 
 ## Scopes
-SMART v2 scope syntax, **read/search only**. Examples: `patient/Patient.rs`, `patient/Condition.read`, `patient/Observation.rs`, plus `launch`, `openid`, `fhirUser`, `offline_access`. There are no write (`.c`/`.u`/`.d`) scopes — the API does not write.
+SMART v2 scope syntax, **read/search only**. Form: `[persona]/[resource].rs` (e.g. `patient/Patient.rs`, `patient/Observation.rs`, `patient/Condition.read`), plus `launch`, `openid`, `fhirUser`, `offline_access`. There are no write (`.c`/`.u`/`.d`) scopes — the API does not write.
+
+**Granular scopes** — you can restrict a scope to a subset of data with a search parameter: `[persona]/[resource].rs?[parameter]=[value]`. Documented examples:
+- `patient/Observation.rs?category=laboratory` (labs only)
+- `patient/Observation.rs?category=vital-signs` (vitals only)
+- `patient/Condition.rs?category=problem-list-item`
 
 ## Supported resources (US Core / USCDI v1)
 Confirmed from the documentation's resource list:
@@ -49,9 +54,37 @@ Confirmed from the documentation's resource list:
 - **DiagnosticReport** (laboratory results + report/note exchange)
 - …and additional US Core resources documented further in the spec (e.g. medications, immunizations) — verify the full set in CureMD's PDF for your use case.
 
-## Errors & bulk data
-- The documentation includes an **Errors and Exceptions** section (handle standard FHIR `OperationOutcome` responses and HTTP 429 for rate limiting).
-- A **bulk export** path exists with **export content polling** and a stated **data-synchronization frequency** — relevant for population-level reads, subject to the same read-only constraint.
+## Usage policy & data freshness (important)
+| Metric | Constraint |
+|---|---|
+| Per-minute limit | 20 requests (1,200/hour) |
+| Over-limit error | HTTP 429 (with `Retry-After`) |
+| Export polling interval | No more than once every 15 minutes |
+| **Underlying data refresh** | **Weekly (every 7 days)** |
+
+The last row matters: CureMD refreshes the underlying data **weekly**, so scheduling syncs more often than once a week yields no new data — just load and 429s. Implement request throttling and consumption monitoring.
+
+## Errors & status codes
+Every interaction returns standard HTTP codes; error bodies are FHIR `OperationOutcome`. Documented codes:
+| Code | Meaning | Notes |
+|---|---|---|
+| 200 | OK | Expected resource/Bundle payload |
+| 400 | Bad Request | Malformed JSON, bad parameters, structural issues (`issue.code` = invalid/structure/value) |
+| 401 | Unauthorized | Missing/invalid credentials; `WWW-Authenticate` header |
+| 403 | Forbidden | Authenticated but lacks scope / policy denies |
+| 404 | Not Found | `issue.code = not-found` |
+| 405 | Method Not Allowed | e.g. a write verb on this read-only API |
+| 409 / 410 / 412 | Conflict / Gone / Precondition Failed | Versioning, deleted, concurrency headers |
+| 413 / 415 | Payload Too Large / Unsupported Media Type | Oversized or non-FHIR content |
+| 422 | Unprocessable Entity | Profile/value-set/business-rule validation failure |
+| 429 | Too Many Requests | Rate limit; `Retry-After` header |
+| 500 / 501 / 503 / 504 | Server error / Not Implemented / Unavailable / Gateway Timeout | Server, dependency, or terminology-server issues |
+
+## Bulk data
+A **bulk export** flow exists (asynchronous, `Prefer: respond-async`, poll the returned content location no more than every 15 minutes). Same read-only and weekly-refresh constraints apply.
+
+## Provenance
+US Core requires Provenance to accompany the resources it describes — request it with `_revinclude=Provenance:target`, e.g. `GET [base-url]/Observation?_id=20401&_revinclude=Provenance:target`.
 
 ## Practical notes
 - Don't hardcode a base URL — it is per-tenant; always run discovery against the base URL CureMD issues you.
