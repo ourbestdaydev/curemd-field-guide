@@ -1,4 +1,5 @@
 ---
+permalink: /
 ---
 # CureMD Field Guide — Unofficial Documentation & API Reference
 
