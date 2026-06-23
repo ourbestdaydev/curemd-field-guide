@@ -1,0 +1,4293 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CureMD FHIR API (unofficial OpenAPI description)",
+    "version": "0.1.0",
+    "summary": "Read-only FHIR R4 / US Core 3.1.1 API for the CureMD EHR.",
+    "description": "UNOFFICIAL OpenAPI 3.1 description of CureMD's FHIR API, derived from CureMD's public\ndeveloper documentation (https://www.curemd.com/developer/fhir-apis.pdf). Not produced,\nsponsored, or endorsed by CureMD. Verify against CureMD's own documentation before relying on it.\n\nKey facts encoded here:\n- FHIR Release 4, US Core 3.1.1, USCDI v1.\n- READ / SEARCH ONLY — no create/update/delete operations exist.\n- Authorization: SMART App Launch STU2 (OAuth 2.0 + OpenID Connect). PKCE (S256) is MANDATORY\n  for all user-facing flows; OpenAPI's oauth2 scheme does not model PKCE explicitly.\n- The base URL is PER-TENANT, issued by CureMD at registration; set the `baseUrl` server variable.\n- The authorization and token URLs are discovered at runtime via GET {baseUrl}/.well-known/smart-configuration;\n  the values in the oauth2 flow below are placeholders.\n- Rate limit: 20 requests/minute per client (HTTP 429 over the limit).\n- Cost: patient-facing access to a patient's own data is free; clinician/backend access requires a\n  signed business agreement with the practice and additional cost.\n- Full FHIR R4 resource schemas are not reproduced; responses are typed as generic FHIR resources/Bundles.",
+    "license": {
+      "name": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    "contact": {
+      "name": "CureMD Field Guide (unofficial)",
+      "url": "https://github.com/ourbestdaydev/curemd-field-guide"
+    }
+  },
+  "externalDocs": {
+    "description": "CureMD FHIR API documentation (authoritative source)",
+    "url": "https://www.curemd.com/developer/fhir-apis.pdf"
+  },
+  "servers": [
+    {
+      "url": "{baseUrl}",
+      "description": "Per-tenant CureMD FHIR base URL, issued at app registration.",
+      "variables": {
+        "baseUrl": {
+          "default": "https://example.curemd.com/fhir",
+          "description": "Replace with the base URL CureMD provisions for your practice/tenant."
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Conformance",
+      "description": "Discovery and capability endpoints."
+    },
+    {
+      "name": "Bulk Data",
+      "description": "Asynchronous FHIR Bulk Data ($export)."
+    },
+    {
+      "name": "Patient",
+      "description": "US Core Patient (read/search)."
+    },
+    {
+      "name": "AllergyIntolerance",
+      "description": "US Core AllergyIntolerance (read/search)."
+    },
+    {
+      "name": "CarePlan",
+      "description": "US Core CarePlan (read/search)."
+    },
+    {
+      "name": "CareTeam",
+      "description": "US Core CareTeam (read/search)."
+    },
+    {
+      "name": "Condition",
+      "description": "US Core Condition (read/search)."
+    },
+    {
+      "name": "Coverage",
+      "description": "US Core Coverage (read/search)."
+    },
+    {
+      "name": "Device",
+      "description": "US Core Device (read/search)."
+    },
+    {
+      "name": "DiagnosticReport",
+      "description": "US Core DiagnosticReport (read/search)."
+    },
+    {
+      "name": "DocumentReference",
+      "description": "US Core DocumentReference (read/search)."
+    },
+    {
+      "name": "Encounter",
+      "description": "US Core Encounter (read/search)."
+    },
+    {
+      "name": "Endpoint",
+      "description": "US Core Endpoint (read/search)."
+    },
+    {
+      "name": "Goal",
+      "description": "US Core Goal (read/search)."
+    },
+    {
+      "name": "Immunization",
+      "description": "US Core Immunization (read/search)."
+    },
+    {
+      "name": "Location",
+      "description": "US Core Location (read/search)."
+    },
+    {
+      "name": "Media",
+      "description": "US Core Media (read/search)."
+    },
+    {
+      "name": "Medication",
+      "description": "US Core Medication (read/search)."
+    },
+    {
+      "name": "MedicationDispense",
+      "description": "US Core MedicationDispense (read/search)."
+    },
+    {
+      "name": "MedicationRequest",
+      "description": "US Core MedicationRequest (read/search)."
+    },
+    {
+      "name": "Observation",
+      "description": "US Core Observation (read/search)."
+    },
+    {
+      "name": "Organization",
+      "description": "US Core Organization (read/search)."
+    },
+    {
+      "name": "Practitioner",
+      "description": "US Core Practitioner (read/search)."
+    },
+    {
+      "name": "PractitionerRole",
+      "description": "US Core PractitionerRole (read/search)."
+    },
+    {
+      "name": "Procedure",
+      "description": "US Core Procedure (read/search)."
+    },
+    {
+      "name": "Provenance",
+      "description": "US Core Provenance (read/search)."
+    },
+    {
+      "name": "Questionnaire",
+      "description": "US Core Questionnaire (read/search)."
+    },
+    {
+      "name": "QuestionnaireResponse",
+      "description": "US Core QuestionnaireResponse (read/search)."
+    },
+    {
+      "name": "RelatedPerson",
+      "description": "US Core RelatedPerson (read/search)."
+    },
+    {
+      "name": "ServiceRequest",
+      "description": "US Core ServiceRequest (read/search)."
+    },
+    {
+      "name": "Specimen",
+      "description": "US Core Specimen (read/search)."
+    },
+    {
+      "name": "Appointment",
+      "description": "US Core Appointment (read/search)."
+    }
+  ],
+  "security": [
+    {
+      "smartOnFhir": [
+        "openid",
+        "fhirUser"
+      ]
+    }
+  ],
+  "paths": {
+    "/metadata": {
+      "get": {
+        "tags": [
+          "Conformance"
+        ],
+        "summary": "Capability statement",
+        "description": "Returns the server's FHIR CapabilityStatement — the canonical, machine-readable description of what this CureMD tenant supports.",
+        "operationId": "getMetadata",
+        "security": [
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "CapabilityStatement",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/.well-known/smart-configuration": {
+      "get": {
+        "tags": [
+          "Conformance"
+        ],
+        "summary": "SMART configuration (discovery)",
+        "description": "Authorization-server metadata. Extract authorization_endpoint, token_endpoint, and jwks_uri here before starting the SMART App Launch flow.",
+        "operationId": "getSmartConfiguration",
+        "security": [
+          {}
+        ],
+        "responses": {
+          "200": {
+            "description": "SMART configuration document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "authorization_endpoint": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "token_endpoint": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "jwks_uri": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "scopes_supported": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "code_challenge_methods_supported": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Includes S256 (PKCE is mandatory)."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Patient/$export": {
+      "get": {
+        "tags": [
+          "Bulk Data"
+        ],
+        "summary": "Patient-level bulk export",
+        "description": "Asynchronous FHIR Bulk Data export for all patients in scope. Send `Prefer: respond-async`; the response returns a content-location to poll. Subject to the read-only and rate-limit constraints.",
+        "operationId": "patientExport",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Patient.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Prefer",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "respond-async"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted — poll the URL in the Content-Location header for export status and output files."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Patient/{id}": {
+      "get": {
+        "tags": [
+          "Patient"
+        ],
+        "summary": "Read Patient by id",
+        "operationId": "readPatient",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Patient.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Patient resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Patient": {
+      "get": {
+        "tags": [
+          "Patient"
+        ],
+        "summary": "Search Patient",
+        "operationId": "searchPatient",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Patient.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "family",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "given",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "birthdate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Patient resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/AllergyIntolerance/{id}": {
+      "get": {
+        "tags": [
+          "AllergyIntolerance"
+        ],
+        "summary": "Read AllergyIntolerance by id",
+        "operationId": "readAllergyIntolerance",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/AllergyIntolerance.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A AllergyIntolerance resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/AllergyIntolerance": {
+      "get": {
+        "tags": [
+          "AllergyIntolerance"
+        ],
+        "summary": "Search AllergyIntolerance",
+        "operationId": "searchAllergyIntolerance",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/AllergyIntolerance.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "clinical-status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of AllergyIntolerance resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/CarePlan/{id}": {
+      "get": {
+        "tags": [
+          "CarePlan"
+        ],
+        "summary": "Read CarePlan by id",
+        "operationId": "readCarePlan",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/CarePlan.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A CarePlan resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/CarePlan": {
+      "get": {
+        "tags": [
+          "CarePlan"
+        ],
+        "summary": "Search CarePlan",
+        "operationId": "searchCarePlan",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/CarePlan.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of CarePlan resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/CareTeam/{id}": {
+      "get": {
+        "tags": [
+          "CareTeam"
+        ],
+        "summary": "Read CareTeam by id",
+        "operationId": "readCareTeam",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/CareTeam.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A CareTeam resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/CareTeam": {
+      "get": {
+        "tags": [
+          "CareTeam"
+        ],
+        "summary": "Search CareTeam",
+        "operationId": "searchCareTeam",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/CareTeam.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of CareTeam resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Condition/{id}": {
+      "get": {
+        "tags": [
+          "Condition"
+        ],
+        "summary": "Read Condition by id",
+        "operationId": "readCondition",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Condition.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Condition resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Condition": {
+      "get": {
+        "tags": [
+          "Condition"
+        ],
+        "summary": "Search Condition",
+        "operationId": "searchCondition",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Condition.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "clinical-status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "onset-date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Condition resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Coverage/{id}": {
+      "get": {
+        "tags": [
+          "Coverage"
+        ],
+        "summary": "Read Coverage by id",
+        "operationId": "readCoverage",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Coverage.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Coverage resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Coverage": {
+      "get": {
+        "tags": [
+          "Coverage"
+        ],
+        "summary": "Search Coverage",
+        "operationId": "searchCoverage",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Coverage.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Coverage resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Device/{id}": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Read Device by id",
+        "operationId": "readDevice",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Device.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Device resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Device": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Search Device",
+        "operationId": "searchDevice",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Device.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Device resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/DiagnosticReport/{id}": {
+      "get": {
+        "tags": [
+          "DiagnosticReport"
+        ],
+        "summary": "Read DiagnosticReport by id",
+        "operationId": "readDiagnosticReport",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/DiagnosticReport.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A DiagnosticReport resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/DiagnosticReport": {
+      "get": {
+        "tags": [
+          "DiagnosticReport"
+        ],
+        "summary": "Search DiagnosticReport",
+        "operationId": "searchDiagnosticReport",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/DiagnosticReport.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of DiagnosticReport resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/DocumentReference/{id}": {
+      "get": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "summary": "Read DocumentReference by id",
+        "operationId": "readDocumentReference",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/DocumentReference.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A DocumentReference resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/DocumentReference": {
+      "get": {
+        "tags": [
+          "DocumentReference"
+        ],
+        "summary": "Search DocumentReference",
+        "operationId": "searchDocumentReference",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/DocumentReference.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of DocumentReference resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Encounter/{id}": {
+      "get": {
+        "tags": [
+          "Encounter"
+        ],
+        "summary": "Read Encounter by id",
+        "operationId": "readEncounter",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Encounter.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Encounter resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Encounter": {
+      "get": {
+        "tags": [
+          "Encounter"
+        ],
+        "summary": "Search Encounter",
+        "operationId": "searchEncounter",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Encounter.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "class",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Encounter resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Endpoint/{id}": {
+      "get": {
+        "tags": [
+          "Endpoint"
+        ],
+        "summary": "Read Endpoint by id",
+        "operationId": "readEndpoint",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Endpoint.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Endpoint resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Endpoint": {
+      "get": {
+        "tags": [
+          "Endpoint"
+        ],
+        "summary": "Search Endpoint",
+        "operationId": "searchEndpoint",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Endpoint.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Endpoint resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Goal/{id}": {
+      "get": {
+        "tags": [
+          "Goal"
+        ],
+        "summary": "Read Goal by id",
+        "operationId": "readGoal",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Goal.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Goal resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Goal": {
+      "get": {
+        "tags": [
+          "Goal"
+        ],
+        "summary": "Search Goal",
+        "operationId": "searchGoal",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Goal.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "lifecycle-status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "target-date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Goal resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Immunization/{id}": {
+      "get": {
+        "tags": [
+          "Immunization"
+        ],
+        "summary": "Read Immunization by id",
+        "operationId": "readImmunization",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Immunization.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Immunization resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Immunization": {
+      "get": {
+        "tags": [
+          "Immunization"
+        ],
+        "summary": "Search Immunization",
+        "operationId": "searchImmunization",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Immunization.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Immunization resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Location/{id}": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "summary": "Read Location by id",
+        "operationId": "readLocation",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Location.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Location resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Location": {
+      "get": {
+        "tags": [
+          "Location"
+        ],
+        "summary": "Search Location",
+        "operationId": "searchLocation",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Location.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Location resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Media/{id}": {
+      "get": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Read Media by id",
+        "operationId": "readMedia",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Media.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Media resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Media": {
+      "get": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Search Media",
+        "operationId": "searchMedia",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Media.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "created",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Media resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Medication/{id}": {
+      "get": {
+        "tags": [
+          "Medication"
+        ],
+        "summary": "Read Medication by id",
+        "operationId": "readMedication",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Medication.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Medication resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Medication": {
+      "get": {
+        "tags": [
+          "Medication"
+        ],
+        "summary": "Search Medication",
+        "operationId": "searchMedication",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Medication.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Medication resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/MedicationDispense/{id}": {
+      "get": {
+        "tags": [
+          "MedicationDispense"
+        ],
+        "summary": "Read MedicationDispense by id",
+        "operationId": "readMedicationDispense",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/MedicationDispense.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A MedicationDispense resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/MedicationDispense": {
+      "get": {
+        "tags": [
+          "MedicationDispense"
+        ],
+        "summary": "Search MedicationDispense",
+        "operationId": "searchMedicationDispense",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/MedicationDispense.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of MedicationDispense resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/MedicationRequest/{id}": {
+      "get": {
+        "tags": [
+          "MedicationRequest"
+        ],
+        "summary": "Read MedicationRequest by id",
+        "operationId": "readMedicationRequest",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/MedicationRequest.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A MedicationRequest resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/MedicationRequest": {
+      "get": {
+        "tags": [
+          "MedicationRequest"
+        ],
+        "summary": "Search MedicationRequest",
+        "operationId": "searchMedicationRequest",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/MedicationRequest.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "intent",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authoredon",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of MedicationRequest resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Observation/{id}": {
+      "get": {
+        "tags": [
+          "Observation"
+        ],
+        "summary": "Read Observation by id",
+        "operationId": "readObservation",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Observation.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Observation resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Observation": {
+      "get": {
+        "tags": [
+          "Observation"
+        ],
+        "summary": "Search Observation",
+        "operationId": "searchObservation",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Observation.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Observation resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Organization/{id}": {
+      "get": {
+        "tags": [
+          "Organization"
+        ],
+        "summary": "Read Organization by id",
+        "operationId": "readOrganization",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Organization.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Organization resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Organization": {
+      "get": {
+        "tags": [
+          "Organization"
+        ],
+        "summary": "Search Organization",
+        "operationId": "searchOrganization",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Organization.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Organization resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Practitioner/{id}": {
+      "get": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Read Practitioner by id",
+        "operationId": "readPractitioner",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Practitioner.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Practitioner resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Practitioner": {
+      "get": {
+        "tags": [
+          "Practitioner"
+        ],
+        "summary": "Search Practitioner",
+        "operationId": "searchPractitioner",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Practitioner.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "identifier",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Practitioner resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/PractitionerRole/{id}": {
+      "get": {
+        "tags": [
+          "PractitionerRole"
+        ],
+        "summary": "Read PractitionerRole by id",
+        "operationId": "readPractitionerRole",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/PractitionerRole.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A PractitionerRole resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/PractitionerRole": {
+      "get": {
+        "tags": [
+          "PractitionerRole"
+        ],
+        "summary": "Search PractitionerRole",
+        "operationId": "searchPractitionerRole",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/PractitionerRole.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "practitioner",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "organization",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of PractitionerRole resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Procedure/{id}": {
+      "get": {
+        "tags": [
+          "Procedure"
+        ],
+        "summary": "Read Procedure by id",
+        "operationId": "readProcedure",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Procedure.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Procedure resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Procedure": {
+      "get": {
+        "tags": [
+          "Procedure"
+        ],
+        "summary": "Search Procedure",
+        "operationId": "searchProcedure",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Procedure.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Procedure resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Provenance/{id}": {
+      "get": {
+        "tags": [
+          "Provenance"
+        ],
+        "summary": "Read Provenance by id",
+        "operationId": "readProvenance",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Provenance.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Provenance resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Provenance": {
+      "get": {
+        "tags": [
+          "Provenance"
+        ],
+        "summary": "Search Provenance",
+        "operationId": "searchProvenance",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Provenance.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Provenance resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Questionnaire/{id}": {
+      "get": {
+        "tags": [
+          "Questionnaire"
+        ],
+        "summary": "Read Questionnaire by id",
+        "operationId": "readQuestionnaire",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Questionnaire.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Questionnaire resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Questionnaire": {
+      "get": {
+        "tags": [
+          "Questionnaire"
+        ],
+        "summary": "Search Questionnaire",
+        "operationId": "searchQuestionnaire",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Questionnaire.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Questionnaire resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/QuestionnaireResponse/{id}": {
+      "get": {
+        "tags": [
+          "QuestionnaireResponse"
+        ],
+        "summary": "Read QuestionnaireResponse by id",
+        "operationId": "readQuestionnaireResponse",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/QuestionnaireResponse.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A QuestionnaireResponse resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/QuestionnaireResponse": {
+      "get": {
+        "tags": [
+          "QuestionnaireResponse"
+        ],
+        "summary": "Search QuestionnaireResponse",
+        "operationId": "searchQuestionnaireResponse",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/QuestionnaireResponse.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "questionnaire",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authored",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of QuestionnaireResponse resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/RelatedPerson/{id}": {
+      "get": {
+        "tags": [
+          "RelatedPerson"
+        ],
+        "summary": "Read RelatedPerson by id",
+        "operationId": "readRelatedPerson",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/RelatedPerson.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A RelatedPerson resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/RelatedPerson": {
+      "get": {
+        "tags": [
+          "RelatedPerson"
+        ],
+        "summary": "Search RelatedPerson",
+        "operationId": "searchRelatedPerson",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/RelatedPerson.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of RelatedPerson resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/ServiceRequest/{id}": {
+      "get": {
+        "tags": [
+          "ServiceRequest"
+        ],
+        "summary": "Read ServiceRequest by id",
+        "operationId": "readServiceRequest",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/ServiceRequest.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A ServiceRequest resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/ServiceRequest": {
+      "get": {
+        "tags": [
+          "ServiceRequest"
+        ],
+        "summary": "Search ServiceRequest",
+        "operationId": "searchServiceRequest",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/ServiceRequest.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authored",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of ServiceRequest resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Specimen/{id}": {
+      "get": {
+        "tags": [
+          "Specimen"
+        ],
+        "summary": "Read Specimen by id",
+        "operationId": "readSpecimen",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Specimen.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Specimen resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Specimen": {
+      "get": {
+        "tags": [
+          "Specimen"
+        ],
+        "summary": "Search Specimen",
+        "operationId": "searchSpecimen",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Specimen.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Specimen resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Appointment/{id}": {
+      "get": {
+        "tags": [
+          "Appointment"
+        ],
+        "summary": "Read Appointment by id",
+        "operationId": "readAppointment",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Appointment.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A Appointment resource (US Core 3.1.1)",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    },
+    "/Appointment": {
+      "get": {
+        "tags": [
+          "Appointment"
+        ],
+        "summary": "Search Appointment",
+        "operationId": "searchAppointment",
+        "security": [
+          {
+            "smartOnFhir": [
+              "patient/Appointment.rs"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient reference / id to scope the search."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_lastUpdated",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "_count",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A searchset Bundle of Appointment resources",
+            "content": {
+              "application/fhir+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bundle"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "smartOnFhir": {
+        "type": "oauth2",
+        "description": "SMART App Launch STU2. PKCE (code_challenge_method=S256) is mandatory. authorizationUrl/tokenUrl below are placeholders — discover the real values via GET {baseUrl}/.well-known/smart-configuration.",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://example.curemd.com/authorize",
+            "tokenUrl": "https://example.curemd.com/token",
+            "refreshUrl": "https://example.curemd.com/token",
+            "scopes": {
+              "launch": "Permission to obtain launch context when launched from CureMD (EHR launch).",
+              "openid": "OpenID Connect — identity of the authorizing user.",
+              "fhirUser": "Retrieve the FHIR resource representing the current user.",
+              "offline_access": "Request a refresh token for long-lived access.",
+              "patient/Patient.rs": "Read and search Patient resources for the in-context patient.",
+              "patient/AllergyIntolerance.rs": "Read and search AllergyIntolerance resources for the in-context patient.",
+              "patient/CarePlan.rs": "Read and search CarePlan resources for the in-context patient.",
+              "patient/CareTeam.rs": "Read and search CareTeam resources for the in-context patient.",
+              "patient/Condition.rs": "Read and search Condition resources for the in-context patient.",
+              "patient/Coverage.rs": "Read and search Coverage resources for the in-context patient.",
+              "patient/Device.rs": "Read and search Device resources for the in-context patient.",
+              "patient/DiagnosticReport.rs": "Read and search DiagnosticReport resources for the in-context patient.",
+              "patient/DocumentReference.rs": "Read and search DocumentReference resources for the in-context patient.",
+              "patient/Encounter.rs": "Read and search Encounter resources for the in-context patient.",
+              "patient/Endpoint.rs": "Read and search Endpoint resources for the in-context patient.",
+              "patient/Goal.rs": "Read and search Goal resources for the in-context patient.",
+              "patient/Immunization.rs": "Read and search Immunization resources for the in-context patient.",
+              "patient/Location.rs": "Read and search Location resources for the in-context patient.",
+              "patient/Media.rs": "Read and search Media resources for the in-context patient.",
+              "patient/Medication.rs": "Read and search Medication resources for the in-context patient.",
+              "patient/MedicationDispense.rs": "Read and search MedicationDispense resources for the in-context patient.",
+              "patient/MedicationRequest.rs": "Read and search MedicationRequest resources for the in-context patient.",
+              "patient/Observation.rs": "Read and search Observation resources for the in-context patient.",
+              "patient/Organization.rs": "Read and search Organization resources for the in-context patient.",
+              "patient/Practitioner.rs": "Read and search Practitioner resources for the in-context patient.",
+              "patient/PractitionerRole.rs": "Read and search PractitionerRole resources for the in-context patient.",
+              "patient/Procedure.rs": "Read and search Procedure resources for the in-context patient.",
+              "patient/Provenance.rs": "Read and search Provenance resources for the in-context patient.",
+              "patient/Questionnaire.rs": "Read and search Questionnaire resources for the in-context patient.",
+              "patient/QuestionnaireResponse.rs": "Read and search QuestionnaireResponse resources for the in-context patient.",
+              "patient/RelatedPerson.rs": "Read and search RelatedPerson resources for the in-context patient.",
+              "patient/ServiceRequest.rs": "Read and search ServiceRequest resources for the in-context patient.",
+              "patient/Specimen.rs": "Read and search Specimen resources for the in-context patient.",
+              "patient/Appointment.rs": "Read and search Appointment resources for the in-context patient."
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "idPath": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Logical id of the resource."
+      }
+    },
+    "schemas": {
+      "FhirResource": {
+        "type": "object",
+        "description": "A FHIR R4 resource (US Core 3.1.1 profile). Schema is intentionally generic; see the FHIR R4 / US Core specs for full element definitions.",
+        "required": [
+          "resourceType"
+        ],
+        "properties": {
+          "resourceType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Bundle": {
+        "type": "object",
+        "description": "A FHIR searchset Bundle.",
+        "required": [
+          "resourceType",
+          "type"
+        ],
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "const": "Bundle"
+          },
+          "type": {
+            "type": "string",
+            "const": "searchset"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "link": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "relation": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              }
+            }
+          },
+          "entry": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fullUrl": {
+                  "type": "string"
+                },
+                "resource": {
+                  "$ref": "#/components/schemas/FhirResource"
+                }
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "OperationOutcome": {
+        "type": "object",
+        "required": [
+          "resourceType"
+        ],
+        "properties": {
+          "resourceType": {
+            "type": "string",
+            "const": "OperationOutcome"
+          },
+          "issue": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "severity": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "diagnostics": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid access token.",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Token lacks the required scope, or access is not permitted for this tenant/patient.",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found.",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded (20 requests/minute per client). Back off and retry.",
+        "content": {
+          "application/fhir+json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperationOutcome"
+            }
+          }
+        }
+      }
+    }
+  }
+}

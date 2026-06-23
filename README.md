@@ -63,6 +63,7 @@ Reference notes, each compiled from CureMD's public site, certification disclosu
 - `interoperability.md` — the integration core: FHIR / HL7 / CCD / CommonWell / Carequality / certifications.
 - `fhir-explainer.md` — a plain-English explainer of what the FHIR API is, what it can and cannot do, and what "getting access" really means.
 - `fhir-api-reference.md` — a developer quick reference: supported US Core resources, the SMART STU2 + PKCE auth flow, scopes, registration, rate limits, and bulk export.
+- `curemd-fhir-openapi.json` — a generated, unofficial **OpenAPI 3.1** description of the read-only FHIR API (30 resources, read + search, SMART oauth2) for Swagger UI, code generators, Postman, and AI tools. Regenerate with `tools/generate-openapi.mjs`.
 - `products.md` — the product suite (EHR, Practice Management, Leap Health portal, Avalon mobile, CureLINK labs, data migration).
 - `compliance-support-legal.md` — ONC certification, HIPAA posture, License & Services Agreement and Business Associate Addendum, support contacts, sub-processors.
 - `pricing-company-resources.md` — pricing facts, company facts, awards, and the whitepaper catalog.
