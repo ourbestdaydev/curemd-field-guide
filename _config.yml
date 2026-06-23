@@ -1,0 +1,16 @@
+title: CureMD Field Guide
+description: >-
+  Unofficial CureMD documentation, FHIR API reference, and AI-assistant skills for the
+  CureMD electronic health record (EHR/EMR) — FHIR, HL7, USCDI, SMART-on-FHIR,
+  interoperability channels, and compliance. Compiled from CureMD's public docs.
+theme: jekyll-theme-cayman
+show_downloads: false
+plugins:
+  - jekyll-seo-tag
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: false
+exclude:
+  - LICENSE
+  - .gitignore

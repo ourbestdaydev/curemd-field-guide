@@ -1,3 +1,5 @@
+---
+---
 # CureMD — Compliance, Security, Support & Legal
 
 > Compiled mid-2026 from the FAQ, HIPAA pages, certification disclosure, support pages, privacy policy, and the License & Services Agreement. The binding HIPAA/security terms live in the legal PDFs published on CureMD's site, **not** the marketing pages.

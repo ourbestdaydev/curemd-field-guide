@@ -1,3 +1,5 @@
+---
+---
 # CureMD FHIR API — Reference
 
 > The Fast Healthcare Interoperability Resources (FHIR) application programming interface (API) is the modern way to **read** a patient's clinical data in CureMD. The specification is public (`https://www.curemd.com/developer/fhir-apis.pdf`, 276 pages) and most facts below are confirmed from it. **The API is read-only** — for write-back, FHIR is not the channel (see "Read vs. write").

@@ -1,3 +1,5 @@
+---
+---
 # CureMD Non-FHIR Integration Channels — Reference
 
 > When the Fast Healthcare Interoperability Resources (FHIR) application programming interface isn't the right fit — or doesn't expose what you need — these are the other ways data moves in and out of CureMD. All are vendor-provisioned (you arrange them with CureMD), none is self-serve.

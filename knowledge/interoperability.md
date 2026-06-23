@@ -1,3 +1,5 @@
+---
+---
 # CureMD — Interoperability & Integration
 
 > Compiled mid-2026 from CureMD's interoperability page, the 5010/EDI page, certification disclosures, and press releases. This is the most important file for anyone integrating an application with CureMD, because CureMD is the system of record in the practices that run it.

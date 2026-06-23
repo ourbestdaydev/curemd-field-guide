@@ -1,3 +1,5 @@
+---
+---
 # CureMD Website Map
 
 > Generated 2026-06-18 from https://www.curemd.com/sitemap.xml — **312 URLs total**, bucketed by purpose.

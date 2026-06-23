@@ -1,3 +1,5 @@
+---
+---
 # CureMD Blog — Link Map & Mined Findings
 
 > blog.curemd.com is a WordPress site with **960 posts across ~48 categories** (full post list isn't worth committing — most posts are generic SEO/guest content). This file maps the categories worth watching and captures the durable, CureMD-specific facts found mid-2026. **Honest verdict:** the blog is ~90% generic; the value is concentrated in a handful of recent (2025–2026) product posts.

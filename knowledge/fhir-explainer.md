@@ -1,3 +1,5 @@
+---
+---
 # The CureMD FHIR API, in plain English
 
 > A short, jargon-free explainer so anyone on a team understands what the FHIR API is, what it can and cannot do, and what "getting access" really involves — without reading the 276-page technical specification (`https://www.curemd.com/developer/fhir-apis.pdf`). For the technical detail, see [interoperability.md](interoperability.md) and the integration skill's FHIR reference.

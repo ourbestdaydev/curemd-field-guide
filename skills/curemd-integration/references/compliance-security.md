@@ -1,3 +1,5 @@
+---
+---
 # CureMD Integration — Compliance & Security Reference
 
 > Read this before designing any flow that moves protected health information to or from CureMD. Getting the contract and consent model right is a precondition, not an afterthought — the data is a patient's health record, and the liability is real.
