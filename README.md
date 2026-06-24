@@ -19,7 +19,7 @@ This is an **unofficial** resource. It is **not affiliated with, sponsored by, o
 
 ## The headline facts
 
-- **CureMD has a public, read-only FHIR API.** The specification is published at `https://www.curemd.com/developer/fhir-apis.pdf`, even though CureMD's marketing site never links to it. It is built to FHIR Release 4, US Core 3.1.1, and USCDI version 1, with SMART App Launch (STU2) authorization and mandatory PKCE.
+- **CureMD has a public, read-only FHIR API.** The specification is published at `https://www.curemd.com/developer/fhir-apis.pdf`, even though CureMD's marketing site never links to it. It is built to FHIR Release 4, US Core 3.1.1, and USCDI version 3, with SMART App Launch (STU2) authorization and mandatory PKCE.
 - **The FHIR API is read/search only.** There is no FHIR write. Any two-way data flow has to use a different channel — CureMD's HL7 version 2 interfaces (the "CureLINK" engine), Continuity of Care Document exchange over Direct secure messaging, or the X12 5010 billing transaction set.
 - **Patient-facing access is free; clinician/backend access is paid.** A patient (or guardian) granting an app access to their own record costs nothing. An organization-wide, server-to-server credential requires a signed business agreement with the practice and incurs additional cost.
 - **Other channels exist.** Beyond FHIR, CureMD supports HL7 v2 lab/imaging feeds, CommonWell and Carequality cross-organization record retrieval, Direct/CCD document exchange, and the full X12 5010 electronic-data-interchange set.
@@ -36,7 +36,7 @@ No. The certified FHIR API is **read/search only** — there is no FHIR write. T
 **Patient-facing** apps reading a patient's own data are **free**. **Clinician-facing or server-to-server (backend)** access requires a signed business agreement with the practice and **costs extra**.
 
 **What standards does the CureMD FHIR API use?**
-FHIR Release 4, US Core 3.1.1, and USCDI version 1, with SMART App Launch (STU2) authorization, OAuth 2.0 + OpenID Connect, and mandatory PKCE. The rate limit is 20 requests/minute per client.
+FHIR Release 4, US Core 3.1.1, and USCDI version 3, with SMART App Launch (STU2) authorization, OAuth 2.0 + OpenID Connect, and mandatory PKCE. The rate limit is 20 requests/minute per client.
 
 **How do I get access to the CureMD FHIR API?**
 There is no self-service developer portal. You register an app by emailing CureMD support; the FHIR service base URL is provisioned per practice/tenant. See [the FHIR explainer](knowledge/fhir-explainer.md).

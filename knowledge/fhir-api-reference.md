@@ -10,7 +10,7 @@
 | Property | Value |
 |---|---|
 | FHIR version | Release 4 (R4) |
-| Profiles | US Core 3.1.1 / USCDI v1 |
+| Profiles | US Core 3.1.1; resources documented as conforming to USCDI v3 (see note) |
 | Authorization | SMART App Launch **STU2 (v2.0.0)**, OAuth 2.0 + OpenID Connect |
 | PKCE | **Mandatory** for all user-facing flows (`code_challenge_method=S256`), public *and* confidential clients |
 | Access | **Read / search only** — no create/update/delete |
@@ -18,6 +18,8 @@
 | Base URL | **Per tenant/practice** — issued at registration; not a single fixed production URL |
 | Bulk data | Supports an export/polling flow with a stated data-synchronization frequency |
 | Cost | Patient-facing apps reading a patient's own data: free. Clinician/backend: signed business agreement with the practice + additional cost. |
+
+> **Note on the USCDI version.** CureMD's developer documentation states the resources are built to US Core 3.1.1 and repeatedly says each "conforms to USCDI v3." Separately, CureMD's mandatory cost disclosure describes the *free* patient-facing tier in terms of "USCDI v1 data classes" — that phrase reflects the certified §170.315(g)(10) floor, not the full set of data the current API exposes. In short: the API is documented against USCDI v3; the free-access language is written against the USCDI v1 certification floor. (US Core 3.1.1 was originally the USCDI v1-era profile, so the pairing CureMD documents is itself slightly unusual — verify against CureMD's own PDF before relying on it.)
 
 ## Registration (how you get credentials)
 There is **no self-service developer portal**. You register by emailing **support@curemd.com** with:
@@ -42,7 +44,7 @@ SMART v2 scope syntax, **read/search only**. Form: `[persona]/[resource].rs` (e.
 - `patient/Observation.rs?category=vital-signs` (vitals only)
 - `patient/Condition.rs?category=problem-list-item`
 
-## Supported resources (US Core / USCDI v1)
+## Supported resources (US Core 3.1.1 / USCDI v3)
 Confirmed from the documentation's resource list:
 - **Patient**
 - **Observation** — Body Height, Body Weight, Body Temperature, Blood Pressure, Heart Rate, Respiratory Rate, Smoking Status, Pulse Oximetry, Pediatric BMI-for-Age, Pediatric Head Occipital-frontal Circumference Percentile, Pediatric Weight-for-Height, Laboratory Result, Clinical Result, Occupation, and social-history profiles (Alcohol, Drug, Sexual, Education, Sleep, Diet, Exercise, Tanning, Travel History), Pregnancy Status, Pregnancy Intent, Sexual Orientation, Screening Assessments (assessment forms, custom forms, evaluations)

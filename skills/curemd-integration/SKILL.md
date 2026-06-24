@@ -21,7 +21,7 @@ The whole reason this skill exists: **CureMD's marketing website actively unders
 
 ## The one fact that changes everything
 
-**CureMD has a Fast Healthcare Interoperability Resources (FHIR) application programming interface, and its documentation is public** (`https://www.curemd.com/developer/fhir-apis.pdf`). The certified product *CureMD SMART Cloud 10g* (Office of the National Coordinator 2015 Edition Cures Update, certified 2023-03-02, Certification ID `15.07.04.2706.CURE.10.01.1.230302`) certifies the §170.315(g)(10) standardized FHIR API. Confirmed from the official spec: **FHIR Release 4, US Core 3.1.1, USCDI version 1; SMART App Launch STU2 with PKCE; a 20-requests-per-minute rate limit.**
+**CureMD has a Fast Healthcare Interoperability Resources (FHIR) application programming interface, and its documentation is public** (`https://www.curemd.com/developer/fhir-apis.pdf`). The certified product *CureMD SMART Cloud 10g* (Office of the National Coordinator 2015 Edition Cures Update, certified 2023-03-02, Certification ID `15.07.04.2706.CURE.10.01.1.230302`) certifies the §170.315(g)(10) standardized FHIR API. Confirmed from the official spec: **FHIR Release 4, US Core 3.1.1, resources documented as conforming to USCDI v3; SMART App Launch STU2 with PKCE; a 20-requests-per-minute rate limit.**
 
 Consequences:
 - A granular, standards-based **read** integration is real, documented, and certification-backed.

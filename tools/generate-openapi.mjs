@@ -173,7 +173,7 @@ const spec = {
       "sponsored, or endorsed by CureMD. Verify against CureMD's own documentation before relying on it.",
       "",
       "Key facts encoded here:",
-      "- FHIR Release 4, US Core 3.1.1, USCDI v1.",
+      "- FHIR Release 4, US Core 3.1.1; resources documented as conforming to USCDI v3 (the free patient-facing tier is described by CureMD as USCDI v1 data classes, the certified floor).",
       "- READ / SEARCH ONLY — no create/update/delete operations exist.",
       "- Authorization: SMART App Launch STU2 (OAuth 2.0 + OpenID Connect). PKCE (S256) is MANDATORY",
       "  for all user-facing flows; OpenAPI's oauth2 scheme does not model PKCE explicitly.",

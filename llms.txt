@@ -1,6 +1,6 @@
 # CureMD Field Guide
 
-> Unofficial documentation, FHIR API reference, and AI-assistant skills for the CureMD electronic health record (EHR/EMR). Compiled from CureMD's public documentation and its Office of the National Coordinator certification record. Key facts: CureMD has a public, read-only FHIR API (Release 4 / US Core 3.1.1 / USCDI v1, SMART App Launch STU2 + PKCE); patient-facing access is free while clinician/backend access is paid; write-back uses HL7 v2 / CCD / X12, not FHIR.
+> Unofficial documentation, FHIR API reference, and AI-assistant skills for the CureMD electronic health record (EHR/EMR). Compiled from CureMD's public documentation and its Office of the National Coordinator certification record. Key facts: CureMD has a public, read-only FHIR API (Release 4 / US Core 3.1.1 / USCDI v3, SMART App Launch STU2 + PKCE); patient-facing access is free while clinician/backend access is paid; write-back uses HL7 v2 / CCD / X12, not FHIR.
 
 ## Knowledge
 - [Interoperability & integration](https://raw.githubusercontent.com/ourbestdaydev/curemd-field-guide/main/knowledge/interoperability.md): FHIR, HL7, CCD/Direct, CommonWell, Carequality, X12 5010, and CureMD's certifications — the integration core.

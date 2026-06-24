@@ -6,16 +6,16 @@
 
 ## Confirmed facts (from CureMD's published FHIR API documentation, mid-2026)
 - The certified product *CureMD SMART Cloud 10g* holds **Office of the National Coordinator 2015 Edition Cures Update** certification (ID `15.07.04.2706.CURE.10.01.1.230302`, 2023-03-02), certifying the **§170.315(g)(10)** standardized API criterion. Required software includes **HAPI FHIR** and **Keycloak**.
-- **Standards:** FHIR **Release 4**, **US Core 3.1.1**, **USCDI version 1**.
+- **Standards:** FHIR **Release 4**, **US Core 3.1.1**; the developer documentation states each resource **conforms to USCDI v3**. (The mandatory cost disclosure describes the *free* patient-facing tier as "USCDI v1 data classes" — the certified §170.315(g)(10) floor, a narrower set than the v3-documented API.)
 - **Authorization:** **SMART App Launch STU2 (v2.0.0)**, OAuth 2.0 + OpenID Connect, **PKCE strictly enforced** for all user-facing flows; SMART version-2 scope syntax; Keycloak is the identity layer.
 - **Scopes are read (`r`) and search (`s`) only** — there is **no write/create/update** capability.
 - **Rate limit:** 20 requests/minute (1,200/hour) per client; HTTP 429 on exceed.
 - **Service base URL:** provisioned **per tenant/practice at registration** — there is no single fixed production URL. Discover endpoints via `GET [base-url]/.well-known/smart-configuration` (returns `authorization_endpoint`, `token_endpoint`, `jwks_uri`).
 - **App registration:** by email to **support@curemd.com** (no self-service portal). Supply app name, homepage, privacy-policy and terms-of-service URLs, OAuth redirect URLs, launch URL, app type, and requested SMART scopes.
-- **Fees:** patient-facing app access to a patient's own USCDI v1 data is **free**; clinician-centered and backend (server-to-server) access requires a **signed business agreement with the practice** and incurs **additional cost** (per `https://www.curemd.com/mandatory-disclosures-additional-costs.pdf`).
+- **Fees:** patient-facing app access to a patient's own data is **free** (the cost disclosure phrases this as access to "USCDI v1 data classes"); clinician-centered and backend (server-to-server) access requires a **signed business agreement with the practice** and incurs **additional cost** (per `https://www.curemd.com/mandatory-disclosures-additional-costs.pdf`).
 
-## USCDI v1 data available (read)
-The USCDI v1 data classes as FHIR R4 / US Core 3.1.1 resources: Patient, Condition, Observation (labs, vitals, smoking status), MedicationRequest, AllergyIntolerance, Immunization, Procedure, DiagnosticReport, DocumentReference, CarePlan, CareTeam, Goal, Encounter, Provenance, and others. (For the exact resource/field list and search parameters, read the published FHIR API documentation PDF.)
+## Readable data (US Core 3.1.1 / USCDI v3)
+Representative FHIR R4 / US Core 3.1.1 resources the API exposes for **read**: Patient, Condition, Observation (labs, vitals, smoking status), MedicationRequest, AllergyIntolerance, Immunization, Procedure, DiagnosticReport, DocumentReference, CarePlan, CareTeam, Goal, Encounter, Provenance, and others. (For the exact resource/field list and search parameters, read the published FHIR API documentation PDF — it documents conformance to USCDI v3.)
 
 ## Read vs. write
 - **Read / search:** fully supported and certified.

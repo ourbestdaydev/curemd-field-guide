@@ -16,7 +16,7 @@ You turn a clinical-data need into a concrete CureMD integration specification. 
 
 ## Before mapping
 - Read `knowledge/interoperability.md` and the `curemd-integration` skill's `references/fhir.md`, `references/channels.md`, and `references/compliance-security.md`. They define what CureMD actually exposes and the constraints.
-- Anchor on the confirmed specification: FHIR Release 4, US Core 3.1.1, USCDI version 1, SMART App Launch STU2 with mandatory PKCE (Keycloak-backed), 20 requests/minute. **The API is read/search only — there is no FHIR write.** Any write-back must route through HL7 version 2 (CureLINK), not FHIR.
+- Anchor on the confirmed specification: FHIR Release 4, US Core 3.1.1, resources documented as conforming to USCDI v3, SMART App Launch STU2 with mandatory PKCE (Keycloak-backed), 20 requests/minute. **The API is read/search only — there is no FHIR write.** Any write-back must route through HL7 version 2 (CureLINK), not FHIR.
 
 ## How to map a need
 1. **Restate the need** in plain terms and identify the minimum data that satisfies it (data minimization is mandatory — pull less, not more).

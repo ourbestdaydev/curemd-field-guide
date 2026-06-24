@@ -7,7 +7,7 @@
 ## 1. Authoritative integration sources (use these for real connection facts)
 | Source | URL / location | What it's for |
 |---|---|---|
-| **CureMD FHIR API documentation** | `https://www.curemd.com/developer/fhir-apis.pdf` | The real spec: FHIR R4 / US Core 3.1.1 / USCDI v1, SMART STU2 + PKCE, **read-only**, 20 req/min, per-tenant base URL |
+| **CureMD FHIR API documentation** | `https://www.curemd.com/developer/fhir-apis.pdf` | The real spec: FHIR R4 / US Core 3.1.1 / USCDI v3, SMART STU2 + PKCE, **read-only**, 20 req/min, per-tenant base URL |
 | **CureMD mandatory cost disclosure** | `https://www.curemd.com/mandatory-disclosures-additional-costs.pdf` | Confirms patient-facing FHIR access is **free**, clinician/backend is **paid**, no contractual limitations |
 | **ONC Certified Health IT Product List (CHPL)** | https://chpl.healthit.gov — Cert ID `15.07.04.2706.CURE.10.01.1.230302` | Structured certification cross-check (criteria, test results, surveillance). Web listing is public; the representational-state-transfer API needs a free API key |
 | **CureMD vendor contact** | sales +1 646 663 8030; support +1 (212) 852-0279 / support@curemd.com | FHIR app registration (by email), instance access, Business Associate Agreement, clinician/backend pricing. Direct contact is the only path to instance-specific access |
