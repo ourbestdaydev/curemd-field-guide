@@ -2,6 +2,14 @@
 
 Small scripts and recipes for the knowledge base.
 
+## `fhir-reader.html` — read-only record viewer (open in a browser)
+
+A single self-contained HTML file (no build, no install) that reads a patient's record from any FHIR Release 4 server and renders it readably — demographics plus lazy-loaded sections for conditions, vitals, labs, medications, allergies, immunizations, procedures, encounters, documents, care plans, and goals. It issues only `GET` (read/search) requests; it can never write.
+
+Open the file in a browser. It defaults to a **public test server with synthetic data** (HAPI), so it works immediately with nothing to configure — search a name (e.g. "Smith") or load a patient by id. The quick-pick also offers the SMART Health IT sandbox, whose synthetic patients have richer records.
+
+To point it at a **real CureMD tenant**: set the base URL issued at registration and paste a valid access token (obtained via the SMART App Launch flow — see [`../knowledge/fhir-api-reference.md`](../knowledge/fhir-api-reference.md)). It talks plain FHIR REST, so no code changes are needed. Remember CureMD's weekly data refresh and 20-requests/minute limit, and never load patient data you are not authorized to view.
+
 ## `generate-openapi.mjs` — regenerate the OpenAPI spec
 
 Dependency-free Node script that writes [`../knowledge/curemd-fhir-openapi.json`](../knowledge/curemd-fhir-openapi.json) from the documented resource set. Run it after changing the resource list or any encoded fact:

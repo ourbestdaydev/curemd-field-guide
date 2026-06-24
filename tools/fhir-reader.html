@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FHIR Record Reader — read-only viewer for a FHIR R4 server</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --ink: #f1f5f9;
+    --muted: #94a3b8; --line: #334155; --accent: #38bdf8; --accent-ink: #04293b;
+    --ok: #4ade80; --warn: #fbbf24; --err: #f87171; --focus: #fde047;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:#f8fafc; --panel:#ffffff; --panel-2:#f1f5f9; --ink:#0f172a;
+      --muted:#475569; --line:#cbd5e1; --accent:#0369a1; --accent-ink:#ffffff; --focus:#1d4ed8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+  header { padding: 1rem 1.25rem; border-bottom: 2px solid var(--line); background: var(--panel); }
+  h1 { font-size: 1.25rem; margin: 0 0 .25rem; }
+  .sub { color: var(--muted); font-size: .9rem; margin: 0; }
+  main { max-width: 980px; margin: 0 auto; padding: 1.25rem; }
+  .banner {
+    background: var(--panel-2); border: 1px solid var(--line); border-left: 4px solid var(--warn);
+    border-radius: 8px; padding: .6rem .85rem; margin: 0 0 1rem; font-size: .9rem; color: var(--muted);
+  }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: 0 0 1.25rem; background: var(--panel); }
+  legend { padding: 0 .5rem; font-weight: 600; }
+  label { display: block; font-size: .82rem; color: var(--muted); margin: .5rem 0 .2rem; }
+  input, select, button {
+    font: inherit; color: var(--ink); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 8px; padding: .55rem .7rem;
+  }
+  input { width: 100%; }
+  .row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: end; }
+  .row > div { flex: 1 1 220px; min-width: 0; }
+  button {
+    cursor: pointer; background: var(--accent); color: var(--accent-ink);
+    border: none; font-weight: 600; white-space: nowrap;
+  }
+  button.secondary { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+  button:hover { filter: brightness(1.08); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .status { margin: .75rem 0; font-size: .9rem; min-height: 1.25rem; }
+  .status.err { color: var(--err); } .status.ok { color: var(--ok); }
+  ul.results { list-style: none; padding: 0; margin: .5rem 0 0; }
+  ul.results li { margin: 0 0 .4rem; }
+  ul.results button { width: 100%; text-align: left; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+  .patient-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.25rem; margin: 0 0 1.25rem; }
+  .patient-card h2 { margin: 0 0 .25rem; font-size: 1.35rem; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .5rem .9rem; margin-top: .6rem; }
+  .grid div span { display: block; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; }
+  details.section { border: 1px solid var(--line); border-radius: 10px; margin: 0 0 .75rem; background: var(--panel); overflow: hidden; }
+  details.section > summary {
+    cursor: pointer; padding: .8rem 1rem; font-weight: 600; list-style: none;
+    display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  }
+  details.section > summary::-webkit-details-marker { display: none; }
+  .count { background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: .1rem .6rem; font-size: .78rem; font-weight: 600; }
+  .body { padding: 0 1rem 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+  .empty { color: var(--muted); font-style: italic; padding: .25rem 0; }
+  .pill { font-size: .72rem; padding: .1rem .5rem; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  footer { max-width: 980px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; color: var(--muted); font-size: .82rem; }
+  a { color: var(--accent); }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<header>
+  <h1>FHIR Record Reader</h1>
+  <p class="sub">A read-only viewer for any FHIR Release 4 server. No data is written, ever.</p>
+</header>
+
+<main>
+  <p class="banner" role="note">
+    <strong>Read-only.</strong> This tool only issues <code>GET</code> (read/search) requests — it cannot create or change records.
+    It defaults to a <strong>public test server with synthetic data</strong>. To point it at a real CureMD tenant, set the
+    base URL issued at registration and paste a valid access token below. Never load real patient data you are not authorized to view.
+  </p>
+
+  <fieldset>
+    <legend>Connection</legend>
+    <div class="row">
+      <div style="flex: 2 1 360px;">
+        <label for="baseUrl">FHIR base URL</label>
+        <input id="baseUrl" type="url" value="https://hapi.fhir.org/baseR4"
+               aria-describedby="baseHelp">
+      </div>
+      <div>
+        <label for="server">Quick pick</label>
+        <select id="server">
+          <option value="https://hapi.fhir.org/baseR4">HAPI public R4 (no auth)</option>
+          <option value="https://launch.smarthealthit.org/v/r4/fhir">SMART Health IT sandbox</option>
+          <option value="">— custom (e.g. a CureMD tenant) —</option>
+        </select>
+      </div>
+    </div>
+    <label for="token" id="baseHelp">Access token (optional — needed only for secured servers like CureMD)</label>
+    <input id="token" type="password" placeholder="Bearer token — leave blank for the open test server" autocomplete="off">
+  </fieldset>
+
+  <fieldset>
+    <legend>Find a patient</legend>
+    <div class="row">
+      <div style="flex: 2 1 320px;">
+        <label for="name">Search by name</label>
+        <input id="name" type="search" placeholder="e.g. Smith" enterkeyhint="search">
+      </div>
+      <div style="flex: 0 0 auto;">
+        <label aria-hidden="true">&nbsp;</label>
+        <button id="searchBtn" type="button">Search</button>
+      </div>
+      <div style="flex: 1 1 180px;">
+        <label for="pid">…or load by patient ID</label>
+        <input id="pid" type="text" placeholder="resource id">
+      </div>
+      <div style="flex: 0 0 auto;">
+        <label aria-hidden="true">&nbsp;</label>
+        <button id="loadBtn" type="button" class="secondary">Load ID</button>
+      </div>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <ul id="results" class="results" aria-label="Search results"></ul>
+  </fieldset>
+
+  <section id="record" aria-live="polite"></section>
+</main>
+
+<footer>
+  Built against FHIR R4 / US Core. The generated OpenAPI description of CureMD's API lives alongside this file in
+  <code>knowledge/curemd-fhir-openapi.json</code>. This viewer talks plain FHIR REST, so it works against any
+  conformant R4 server. Unofficial; not affiliated with CureMD. When pointed at CureMD, remember the data refreshes
+  weekly and the rate limit is 20 requests/minute.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const statusEl = $("status"), resultsEl = $("results"), recordEl = $("record");
+
+  function base() { return $("baseUrl").value.replace(/\/+$/, ""); }
+  function headers() {
+    const h = { "Accept": "application/fhir+json" };
+    const t = $("token").value.trim();
+    if (t) h["Authorization"] = "Bearer " + t;
+    return h;
+  }
+  function setStatus(msg, kind) { statusEl.textContent = msg; statusEl.className = "status" + (kind ? " " + kind : ""); }
+
+  async function fhirGet(path) {
+    const url = path.startsWith("http") ? path : base() + path;
+    const res = await fetch(url, { headers: headers() });
+    if (!res.ok) throw new Error("HTTP " + res.status + " — " + res.statusText);
+    return res.json();
+  }
+
+  // ---- formatting helpers (defensive: real servers omit fields) -------------
+  const txt = (cc) => cc && (cc.text || (cc.coding && cc.coding[0] && (cc.coding[0].display || cc.coding[0].code))) || "—";
+  function humanName(p) {
+    const n = (p.name && p.name[0]) || {};
+    if (n.text) return n.text;
+    const given = (n.given || []).join(" ");
+    return [given, n.family].filter(Boolean).join(" ") || "(no name)";
+  }
+  function patientLine(p) {
+    const bits = [];
+    if (p.gender) bits.push(p.gender);
+    if (p.birthDate) bits.push("born " + p.birthDate);
+    if (p.id) bits.push("id " + p.id);
+    return bits.join(" · ");
+  }
+  function obsValue(o) {
+    if (o.valueQuantity) return (o.valueQuantity.value ?? "") + " " + (o.valueQuantity.unit || o.valueQuantity.code || "");
+    if (o.valueString) return o.valueString;
+    if (o.valueCodeableConcept) return txt(o.valueCodeableConcept);
+    if (o.component) return o.component.map(c => txt(c.code) + ": " + (c.valueQuantity ? (c.valueQuantity.value + " " + (c.valueQuantity.unit||"")) : "—")).join("; ");
+    return "—";
+  }
+  const entries = (bundle) => (bundle && bundle.entry || []).map(e => e.resource).filter(Boolean);
+
+  // ---- section definitions: query + table shape ----------------------------
+  const SECTIONS = [
+    { key: "Condition", label: "Conditions / problems", q: (id) => `/Condition?patient=${id}&_count=50`,
+      cols: ["Condition", "Clinical status", "Recorded"],
+      row: (r) => [txt(r.code), txt(r.clinicalStatus) , r.recordedDate || "—"] },
+    { key: "vitals", label: "Vital signs", q: (id) => `/Observation?patient=${id}&category=vital-signs&_count=50&_sort=-date`,
+      cols: ["Vital", "Value", "When"], row: (r) => [txt(r.code), obsValue(r), r.effectiveDateTime || "—"] },
+    { key: "labs", label: "Laboratory results", q: (id) => `/Observation?patient=${id}&category=laboratory&_count=50&_sort=-date`,
+      cols: ["Test", "Value", "When"], row: (r) => [txt(r.code), obsValue(r), r.effectiveDateTime || "—"] },
+    { key: "MedicationRequest", label: "Medications", q: (id) => `/MedicationRequest?patient=${id}&_count=50`,
+      cols: ["Medication", "Status", "Authored"],
+      row: (r) => [r.medicationCodeableConcept ? txt(r.medicationCodeableConcept) : "(reference)", r.status || "—", r.authoredOn || "—"] },
+    { key: "AllergyIntolerance", label: "Allergies", q: (id) => `/AllergyIntolerance?patient=${id}&_count=50`,
+      cols: ["Substance", "Criticality", "Status"],
+      row: (r) => [txt(r.code), r.criticality || "—", txt(r.clinicalStatus)] },
+    { key: "Immunization", label: "Immunizations", q: (id) => `/Immunization?patient=${id}&_count=50`,
+      cols: ["Vaccine", "Status", "Date"], row: (r) => [txt(r.vaccineCode), r.status || "—", r.occurrenceDateTime || "—"] },
+    { key: "Procedure", label: "Procedures", q: (id) => `/Procedure?patient=${id}&_count=50`,
+      cols: ["Procedure", "Status", "When"], row: (r) => [txt(r.code), r.status || "—", (r.performedDateTime || (r.performedPeriod && r.performedPeriod.start) || "—")] },
+    { key: "Encounter", label: "Encounters / visits", q: (id) => `/Encounter?patient=${id}&_count=50&_sort=-date`,
+      cols: ["Type", "Status", "When"], row: (r) => [txt((r.type && r.type[0])), r.status || "—", (r.period && r.period.start) || "—"] },
+    { key: "DocumentReference", label: "Documents", q: (id) => `/DocumentReference?patient=${id}&_count=50`,
+      cols: ["Document", "Status", "Date"], row: (r) => [txt(r.type), r.status || "—", r.date || "—"] },
+    { key: "CarePlan", label: "Care plans", q: (id) => `/CarePlan?patient=${id}&_count=50`,
+      cols: ["Plan", "Status", "Period"], row: (r) => [txt((r.category && r.category[0])) , r.status || "—", (r.period && r.period.start) || "—"] },
+    { key: "Goal", label: "Goals", q: (id) => `/Goal?patient=${id}&_count=50`,
+      cols: ["Goal", "Status"], row: (r) => [txt(r.description), r.lifecycleStatus || "—"] },
+  ];
+
+  function tableFor(section, rows) {
+    if (!rows.length) return `<p class="empty">None found.</p>`;
+    const head = section.cols.map(c => `<th scope="col">${c}</th>`).join("");
+    const body = rows.map(r => {
+      const cells = section.row(r).map(v => `<td>${escapeHtml(String(v))}</td>`).join("");
+      return `<tr>${cells}</tr>`;
+    }).join("");
+    return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  }
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  // ---- render a patient + lazily load each section --------------------------
+  async function showPatient(p) {
+    resultsEl.innerHTML = "";
+    setStatus("Loaded patient. Open a section to read its data.", "ok");
+    const addr = (p.address && p.address[0]) ? [ (p.address[0].line||[]).join(" "), p.address[0].city, p.address[0].state, p.address[0].postalCode ].filter(Boolean).join(", ") : "—";
+    const phone = (p.telecom || []).filter(t => t.system === "phone").map(t => t.value)[0] || "—";
+
+    recordEl.innerHTML = `
+      <div class="patient-card">
+        <h2>${escapeHtml(humanName(p))}</h2>
+        <p class="meta">${escapeHtml(patientLine(p))}</p>
+        <div class="grid">
+          <div><span>Address</span>${escapeHtml(addr)}</div>
+          <div><span>Phone</span>${escapeHtml(phone)}</div>
+          <div><span>Language</span>${escapeHtml((p.communication && p.communication[0] && txt(p.communication[0].language)) || "—")}</div>
+        </div>
+      </div>
+      ${SECTIONS.map(s => `
+        <details class="section" data-key="${s.key}">
+          <summary>${s.label} <span class="count" id="count-${s.key}"><span class="visually-hidden">not yet loaded</span>load</span></summary>
+          <div class="body" id="body-${s.key}"><p class="empty">Opening this section will load the data…</p></div>
+        </details>`).join("")}
+    `;
+
+    SECTIONS.forEach(s => {
+      const det = recordEl.querySelector(`details[data-key="${s.key}"]`);
+      let loaded = false;
+      det.addEventListener("toggle", async () => {
+        if (!det.open || loaded) return;
+        loaded = true;
+        const body = $("body-" + s.key), count = $("count-" + s.key);
+        body.innerHTML = `<p class="empty">Loading…</p>`;
+        try {
+          const rows = entries(await fhirGet(s.q(p.id)));
+          count.textContent = rows.length;
+          body.innerHTML = tableFor(s, rows);
+        } catch (e) {
+          count.textContent = "!";
+          body.innerHTML = `<p class="empty">Could not load: ${escapeHtml(e.message)}</p>`;
+        }
+      });
+    });
+  }
+
+  // ---- search + load --------------------------------------------------------
+  async function search() {
+    const name = $("name").value.trim();
+    recordEl.innerHTML = ""; resultsEl.innerHTML = "";
+    if (!name) { setStatus("Enter a name to search, or load a patient by ID.", "err"); return; }
+    setStatus("Searching…");
+    try {
+      const rows = entries(await fhirGet(`/Patient?name=${encodeURIComponent(name)}&_count=20`));
+      if (!rows.length) { setStatus("No patients matched “" + name + "”.", "err"); return; }
+      setStatus(rows.length + " patient(s) found — choose one:", "ok");
+      resultsEl.innerHTML = rows.map((p, i) =>
+        `<li><button type="button" data-i="${i}">${escapeHtml(humanName(p))} <span class="pill">${escapeHtml(patientLine(p))}</span></button></li>`
+      ).join("");
+      resultsEl.querySelectorAll("button").forEach(btn =>
+        btn.addEventListener("click", () => showPatient(rows[+btn.dataset.i])));
+    } catch (e) { setStatus("Search failed: " + e.message, "err"); }
+  }
+  async function loadById() {
+    const id = $("pid").value.trim();
+    recordEl.innerHTML = ""; resultsEl.innerHTML = "";
+    if (!id) { setStatus("Enter a patient resource id.", "err"); return; }
+    setStatus("Loading patient " + id + "…");
+    try { await showPatient(await fhirGet("/Patient/" + encodeURIComponent(id))); }
+    catch (e) { setStatus("Load failed: " + e.message, "err"); }
+  }
+
+  $("searchBtn").addEventListener("click", search);
+  $("loadBtn").addEventListener("click", loadById);
+  $("name").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+  $("pid").addEventListener("keydown", (e) => { if (e.key === "Enter") loadById(); });
+  $("server").addEventListener("change", (e) => { if (e.target.value) $("baseUrl").value = e.target.value; });
+})();
+</script>
+</body>
+</html>
