@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seed demo patients — populate a FHIR test server</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#1e293b; --panel-2:#273449; --ink:#f1f5f9; --muted:#94a3b8;
+    --line:#334155; --accent:#38bdf8; --accent-ink:#04293b; --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --focus:#fde047;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f8fafc; --panel:#fff; --panel-2:#f1f5f9; --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --accent:#0369a1; --accent-ink:#fff; --focus:#1d4ed8; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:1rem 1.25rem; border-bottom:2px solid var(--line); background:var(--panel); }
+  h1 { font-size:1.25rem; margin:0 0 .25rem; } .sub { color:var(--muted); font-size:.9rem; margin:0; }
+  main { max-width:880px; margin:0 auto; padding:1.25rem; }
+  .banner { background:var(--panel-2); border:1px solid var(--line); border-left:4px solid var(--err); border-radius:8px; padding:.7rem .9rem; margin:0 0 1.25rem; font-size:.9rem; color:var(--ink); }
+  fieldset { border:1px solid var(--line); border-radius:10px; padding:1rem; margin:0 0 1.25rem; background:var(--panel); }
+  legend { padding:0 .5rem; font-weight:600; } label { display:block; font-size:.82rem; color:var(--muted); margin:.5rem 0 .2rem; }
+  input,select,button { font:inherit; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:.55rem .7rem; }
+  input { width:100%; }
+  .row { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; } .row>div { flex:1 1 220px; min-width:0; }
+  button { cursor:pointer; background:var(--accent); color:var(--accent-ink); border:none; font-weight:600; }
+  button:hover { filter:brightness(1.08); } button[disabled] { opacity:.5; cursor:progress; }
+  :focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+  .status { margin:.75rem 0; min-height:1.25rem; font-size:.9rem; } .status.err{color:var(--err);} .status.ok{color:var(--ok);}
+  ul.cards { list-style:none; padding:0; margin:1rem 0 0; } ul.cards li { border:1px solid var(--line); border-radius:10px; padding:.75rem 1rem; margin:0 0 .6rem; background:var(--panel); }
+  ul.cards b { font-size:1.05rem; } .meta { color:var(--muted); font-size:.85rem; }
+  .ok-tag { color:var(--ok); } .err-tag { color:var(--err); }
+  a { color:var(--accent); } code { background:var(--panel-2); padding:.05rem .35rem; border-radius:4px; }
+  .preview { color:var(--muted); font-size:.8rem; margin:.3rem 0 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Seed demo patients</h1>
+  <p class="sub">Populate a FHIR test server with rich synthetic patients, then read them in the <a href="fhir-reader.html">record reader</a>.</p>
+</header>
+
+<main>
+  <p class="banner" role="note">
+    <strong>Test servers only.</strong> This page <em>writes</em> data (HTTP POST). Only run it against an open test server like
+    HAPI. <strong>Never point it at a real CureMD tenant or any server holding real patients</strong> — and CureMD's FHIR API is
+    read-only anyway, so writes there would simply fail. All patients below are invented (Synthea-style fakes); no real people.
+  </p>
+
+  <fieldset>
+    <legend>Target server</legend>
+    <div class="row">
+      <div style="flex:2 1 360px;">
+        <label for="baseUrl">FHIR base URL (must be writable)</label>
+        <input id="baseUrl" type="url" value="https://hapi.fhir.org/baseR4">
+      </div>
+      <div style="flex:0 0 auto;">
+        <label aria-hidden="true">&nbsp;</label>
+        <button id="seedBtn" type="button">Seed demo patients</button>
+      </div>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <ul id="cards" class="cards"></ul>
+  </fieldset>
+
+  <p class="meta">After seeding, open the <a href="fhir-reader.html">record reader</a> (same default server) and search <code>Demo</code> to find all of them — each comes with conditions, vitals, labs, medications, allergies, immunizations, procedures, encounters, documents, care plans, and goals.</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const uuid = () => (self.crypto && self.crypto.randomUUID ? self.crypto.randomUUID()
+    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==="x"?r:(r&0x3|0x8)).toString(16); }));
+
+  const OBS_CAT = "http://terminology.hl7.org/CodeSystem/observation-category";
+
+  // --- one reusable builder: a patient spec -> a FHIR transaction Bundle -----
+  // Using a transaction Bundle with urn:uuid references means the whole record
+  // (patient + every linked resource) is created and wired up in ONE request.
+  function makeBundle(spec) {
+    const patUuid = uuid();              // unique per seed run, so re-seeding never collides
+    const pid = "urn:uuid:" + patUuid;
+    const entry = [];
+    const add = (resource, type) => {
+      entry.push({ fullUrl: "urn:uuid:" + uuid(), resource, request: { method: "POST", url: type } });
+    };
+    const subject = () => ({ reference: pid });
+    const cc = (text) => ({ text });
+
+    // Patient first (its fullUrl is pid so everything else can reference it)
+    entry.push({
+      fullUrl: pid,
+      resource: {
+        resourceType: "Patient",
+        identifier: [{ system: "urn:fhir-reader-demo", value: patUuid }],
+        name: [{ family: spec.name.family, given: spec.name.given }],
+        gender: spec.gender, birthDate: spec.birthDate,
+        telecom: spec.phone ? [{ system: "phone", value: spec.phone }] : undefined,
+        address: spec.address ? [spec.address] : undefined,
+        communication: spec.language ? [{ language: cc(spec.language) }] : undefined
+      },
+      request: { method: "POST", url: "Patient" }
+    });
+
+    (spec.conditions || []).forEach((t, i) => add({
+      resourceType: "Condition",
+      clinicalStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: "active" }] },
+      code: cc(t), subject: subject(), recordedDate: spec.recordedDate || "2022-01-01"
+    }, "Condition"));
+
+    const obs = (o, category) => add({
+      resourceType: "Observation", status: "final",
+      category: [{ coding: [{ system: OBS_CAT, code: category }] }],
+      code: cc(o.text), subject: subject(), effectiveDateTime: o.date || "2023-06-01",
+      valueQuantity: { value: o.value, unit: o.unit }
+    }, "Observation");
+    (spec.vitals || []).forEach(o => obs(o, "vital-signs"));
+    (spec.labs || []).forEach(o => obs(o, "laboratory"));
+
+    (spec.meds || []).forEach(t => add({
+      resourceType: "MedicationRequest", status: "active", intent: "order",
+      medicationCodeableConcept: cc(t), subject: subject(), authoredOn: "2022-02-01"
+    }, "MedicationRequest"));
+
+    (spec.allergies || []).forEach(a => add({
+      resourceType: "AllergyIntolerance",
+      clinicalStatus: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", code: "active" }] },
+      code: cc(a.text), criticality: a.criticality || "low", patient: subject()
+    }, "AllergyIntolerance"));
+
+    (spec.immunizations || []).forEach(im => add({
+      resourceType: "Immunization", status: "completed",
+      vaccineCode: cc(im.text), patient: subject(), occurrenceDateTime: im.date || "2023-10-01"
+    }, "Immunization"));
+
+    (spec.procedures || []).forEach(p => add({
+      resourceType: "Procedure", status: "completed",
+      code: cc(p.text), subject: subject(), performedDateTime: p.date || "2022-08-15"
+    }, "Procedure"));
+
+    (spec.encounters || []).forEach(e => add({
+      resourceType: "Encounter", status: "finished",
+      class: { system: "http://terminology.hl7.org/CodeSystem/v3-ActCode", code: "AMB", display: "ambulatory" },
+      type: [cc(e.text)], subject: subject(), period: { start: e.start || "2023-06-01" }
+    }, "Encounter"));
+
+    (spec.documents || []).forEach(d => add({
+      resourceType: "DocumentReference", status: "current",
+      type: cc(d.text), subject: subject(), date: (d.date || "2023-06-02") + "T10:00:00Z",
+      content: [{ attachment: { contentType: "text/plain", title: d.text } }]
+    }, "DocumentReference"));
+
+    (spec.carePlans || []).forEach(c => add({
+      resourceType: "CarePlan", status: "active", intent: "plan",
+      category: [cc(c.text)], subject: subject(), period: { start: c.start || "2022-02-01" }
+    }, "CarePlan"));
+
+    (spec.goals || []).forEach(t => add({
+      resourceType: "Goal", lifecycleStatus: "active", description: cc(t), subject: subject()
+    }, "Goal"));
+
+    return { resourceType: "Bundle", type: "transaction", entry };
+  }
+
+  // --- the demo set: three diverse, invented patients (search "Demo") --------
+  const DEMO_PATIENTS = [
+    {
+      name: { family: "Lovelace", given: ["Ada", "Demo"] }, gender: "female", birthDate: "1965-04-12",
+      phone: "555-0142", address: { line: ["123 Test Ave"], city: "Milwaukee", state: "WI", postalCode: "53201" }, language: "English",
+      conditions: ["Type 2 diabetes mellitus", "Open-angle glaucoma"],
+      vitals: [{ text: "Body Weight", value: 72, unit: "kg" }, { text: "Heart rate", value: 78, unit: "/min" }],
+      labs: [{ text: "Hemoglobin A1c", value: 7.2, unit: "%" }, { text: "LDL Cholesterol", value: 110, unit: "mg/dL" }],
+      meds: ["Metformin 500mg", "Latanoprost eye drops"],
+      allergies: [{ text: "Penicillin", criticality: "high" }],
+      immunizations: [{ text: "Influenza vaccine" }],
+      procedures: [{ text: "Cataract surgery" }],
+      encounters: [{ text: "Ophthalmology follow-up" }],
+      documents: [{ text: "Progress note" }],
+      carePlans: [{ text: "Diabetes care plan" }],
+      goals: ["Maintain HbA1c below 7%"]
+    },
+    {
+      name: { family: "Hopper", given: ["Grace", "Demo"] }, gender: "female", birthDate: "1944-12-09",
+      phone: "555-0177", address: { line: ["9 Compiler Ct"], city: "Madison", state: "WI", postalCode: "53703" }, language: "English",
+      conditions: ["Essential hypertension", "Age-related macular degeneration"],
+      vitals: [{ text: "Systolic blood pressure", value: 148, unit: "mmHg" }, { text: "Body Temperature", value: 36.8, unit: "Cel" }],
+      labs: [{ text: "Serum creatinine", value: 1.0, unit: "mg/dL" }],
+      meds: ["Lisinopril 10mg"],
+      allergies: [{ text: "Sulfa drugs", criticality: "low" }],
+      immunizations: [{ text: "Pneumococcal vaccine" }, { text: "Shingles vaccine" }],
+      procedures: [{ text: "Intravitreal injection" }],
+      encounters: [{ text: "Low-vision evaluation" }],
+      documents: [{ text: "Visit summary" }],
+      carePlans: [{ text: "Hypertension management plan" }],
+      goals: ["Keep blood pressure below 130/80"]
+    },
+    {
+      name: { family: "Rivera", given: ["Sam", "Demo"] }, gender: "male", birthDate: "2023-02-20",
+      phone: "555-0190", address: { line: ["44 Sunrise Rd"], city: "Milwaukee", state: "WI", postalCode: "53202" }, language: "Spanish",
+      conditions: ["Cortical visual impairment", "Developmental delay"],
+      vitals: [{ text: "Body Weight", value: 11, unit: "kg" }, { text: "Head circumference", value: 47, unit: "cm" }],
+      labs: [{ text: "Newborn screening panel", value: 1, unit: "{result}" }],
+      meds: ["Vitamin D drops"],
+      allergies: [{ text: "No known allergies", criticality: "low" }],
+      immunizations: [{ text: "DTaP vaccine" }, { text: "MMR vaccine" }],
+      procedures: [{ text: "Vision screening" }],
+      encounters: [{ text: "Early-intervention intake" }],
+      documents: [{ text: "Birth to 3 referral" }],
+      carePlans: [{ text: "Individualized Family Service Plan" }],
+      goals: ["Track gross-motor milestones"]
+    }
+  ];
+
+  function setStatus(msg, kind) { const s = $("status"); s.textContent = msg; s.className = "status" + (kind ? " " + kind : ""); }
+  const base = () => $("baseUrl").value.replace(/\/+$/, "");
+
+  async function seed() {
+    const btn = $("seedBtn"), cards = $("cards");
+    btn.disabled = true; cards.innerHTML = ""; setStatus("Seeding " + DEMO_PATIENTS.length + " patients…");
+    let ok = 0;
+    for (const spec of DEMO_PATIENTS) {
+      const li = document.createElement("li");
+      const full = spec.name.given.join(" ") + " " + spec.name.family;
+      li.innerHTML = `<b>${full}</b> <span class="meta">(${spec.gender}, born ${spec.birthDate})</span><div class="meta">creating…</div>`;
+      cards.appendChild(li);
+      try {
+        const res = await fetch(base(), {
+          method: "POST",
+          headers: { "Content-Type": "application/fhir+json", "Accept": "application/fhir+json" },
+          body: JSON.stringify(makeBundle(spec))
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const out = await res.json();
+        const patientEntry = (out.entry || []).find(e => /Patient\/\w/.test((e.response && e.response.location) || ""));
+        const loc = (patientEntry && patientEntry.response.location) || "";
+        const m = loc.match(/Patient\/([^/]+)/);
+        const id = m ? m[1] : "(created)";
+        const count = (out.entry || []).length;
+        li.innerHTML = `<b>${full}</b> <span class="meta">(${spec.gender}, born ${spec.birthDate})</span>` +
+          `<div class="meta"><span class="ok-tag">created</span> — patient id <code>${id}</code>, ${count} resources. ` +
+          `Open the <a href="fhir-reader.html">reader</a> and search <code>Demo</code>.</div>`;
+        ok++;
+      } catch (e) {
+        li.innerHTML = `<b>${full}</b><div class="meta err-tag">failed: ${e.message}</div>`;
+      }
+    }
+    setStatus(ok + " of " + DEMO_PATIENTS.length + " patients seeded. Now open the reader and search “Demo”.", ok ? "ok" : "err");
+    btn.disabled = false;
+  }
+
+  $("seedBtn").addEventListener("click", seed);
+})();
+</script>
+</body>
+</html>
