@@ -8,7 +8,7 @@
 **Actually stated:**
 - **Billing Services: "as low as 3% of Collections"** — the only hard number published anywhere.
 - Model: subscription-based software-as-a-service, cloud-hosted; subscription includes hosting, training, upgrades, support, and maintenance at no extra charge.
-- Marketing claims (not prices): "22% revenue increase after 90 days"; "87% physicians report increase in cash flow."
+- Marketing claims (not prices): "22% revenue increase after 90 days"; "87% physicians report increase in cash flow." (Unverified web-page figures; CureMD's own product brochure instead states "4-10% Revenue Increase" and "85% adoption within 90 days" — treat the 22% with caution.)
 
 **Quote-only (no published numbers):**
 - Practice Management, Electronic Health Records, and All-in-One tiers — require the pricing form or sales call (+1 646 663 8030 / 212 509 6200).

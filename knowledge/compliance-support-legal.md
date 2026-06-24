@@ -24,7 +24,7 @@ The ONC-required "Certified Health IT Costs Information" statement (per 45 CFR 1
 - **General rule:** "All certification criteria for which no additional fee is specified are included in the standard EHR software licensing package and covered by the standard software maintenance fees."
 - **The (g)(10) FHIR API fees (verbatim):** *"Access to USCDI v1 data classes is provided free of charge for patient-facing applications via CureMD's FHIR APIs. For clinician-centered and backend applications, it is necessary to sign business agreements with the practice site prior to requesting registration with CureMD. Additional costs will apply for these integrations."* → **patient-facing data access is free; clinician/backend access is paid and needs a business agreement with the practice.**
 - **Paid add-ons disclosed:** (b)(1) Transitions of Care and (h)(1) Direct via Surescripts (one-time + recurring); (b)(3) e-prescribing of controlled substances; optional (a)(2)/(a)(3) HL7 order interfaces; (f) public-health interfaces (one-time + recurring).
-- **No contractual limitations:** "There are no contractual limitations related to the certified product that would limit the user's ability to use any of the capabilities."
+- **Contractual limitations:** Office of the National Coordinator certification requires CureMD to disclose any contractual limitations on the certified capabilities. The cost-disclosure text we captured lists the access tiers above but no additional limitations; a verbatim "no contractual limitations" statement was **not located** in our captured source — verify on CureMD's live mandatory-disclosures page before relying on it.
 
 ## HIPAA pages (marketing-level)
 - **/hipaa-compliant-ehr-software:** "advanced encryption," role-based access, real-time threat monitoring, automated security updates, secure mobile access; automated HIPAA/MACRA regulatory updates; Meaningful Use Stage 3 + KLAS-recognized. No BAA/audit-log/named-encryption specifics.
@@ -38,7 +38,7 @@ The binding contract (version V0119, 13 pages). Key terms:
 - **HIPAA / Business Associate Agreement:** explicitly incorporated — **Business Associate Addendum at https://www.curemd.com/LSA-BAA.pdf** (§8.5). For the on-premise/Licensee-Hosted version, the Licensee is solely responsible for HIPAA safeguards and risk analysis (§2.6).
 - **Security:** "industry-standard data security protocols" and "commercially reasonable precautions," no guarantee against loss/alteration (§8.4). Licensee is **prohibited from penetration testing** (§2.3).
 - **Service Level:** 99% monthly internet-access uptime with fee credits (§16).
-- **Warranties:** 30-day software warranty; **data-migration warranty up to 5 years**; broad disclaimer otherwise (§14).
+- **Warranties:** 30-day software warranty; data-migration warranty limited to **five (5) business days** from import (or until the database is first altered, whichever is earlier; §13.2); broad disclaimer otherwise (§14).
 - **Liability cap:** 3× average monthly subscription fee (§15).
 - **Termination:** material breach uncured after 60 days; data return must be requested within 3 months of termination (extraction fees may apply); CureMD may retain a copy per HIPAA.
 - **Governing law:** New York; negotiation → AAA mediation in NYC → SDNY courts.
