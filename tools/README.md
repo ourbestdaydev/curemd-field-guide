@@ -10,6 +10,18 @@ Open the file in a browser. It defaults to a **public test server with synthetic
 
 To point it at a **real CureMD tenant**: set the base URL issued at registration and paste a valid access token (obtained via the SMART App Launch flow — see [`../knowledge/fhir-api-reference.md`](../knowledge/fhir-api-reference.md)). It talks plain FHIR REST, so no code changes are needed. Remember CureMD's weekly data refresh and 20-requests/minute limit, and never load patient data you are not authorized to view.
 
+Alongside the clinical sections it also reads back **intake forms (QuestionnaireResponse)** and **consents (Consent)**, so a record created by the intake demo below shows up in full.
+
+## `intake-demo.html` — registration intake, mapped to FHIR (open in a browser)
+
+A single self-contained HTML file demonstrating the **registration theme**: fill in a registration form (person, contact, intake questions, consent-to-treat) and it builds a linked FHIR transaction bundle — a `Patient`, a `QuestionnaireResponse` carrying the intake answers, and a `Consent` — created in **one** request, then readable in the record reader. It deliberately captures a **preferred accessible format** (standard / large print / Braille / audio / screen-reader) — the registration data point that matters most for people with vision loss.
+
+It **writes** (HTTP POST), so it is for **open test servers only** (defaults to HAPI). Never enter a real person's information; CureMD's FHIR API is read-only, so this illustrates how structured intake maps to FHIR rather than a path to write into a live tenant.
+
+## Accessibility (all three tools)
+
+Each tool carries a **display-settings bar**: text-size controls (which scale the whole page) and a **high-contrast** toggle. The choice is remembered across the three pages (shared `localStorage`). The tools also honour the operating-system `prefers-color-scheme`, `prefers-contrast`, and `prefers-reduced-motion` settings, expose a skip-to-content link, use semantic landmarks and live regions for screen readers, and move keyboard focus to newly loaded content. This matters because the intended audience includes people with vision loss.
+
 ## `generate-openapi.mjs` — regenerate the OpenAPI spec
 
 Dependency-free Node script that writes [`../knowledge/curemd-fhir-openapi.json`](../knowledge/curemd-fhir-openapi.json) from the documented resource set. Run it after changing the resource list or any encoded fact:

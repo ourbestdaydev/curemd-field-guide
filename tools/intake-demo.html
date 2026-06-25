@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registration intake demo — turn a form into FHIR resources</title>
+<style>
+  :root {
+    --bg:#0f172a; --panel:#1e293b; --panel-2:#273449; --ink:#f1f5f9; --muted:#94a3b8;
+    --line:#334155; --accent:#38bdf8; --accent-ink:#04293b; --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --focus:#fde047;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f8fafc; --panel:#fff; --panel-2:#f1f5f9; --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --accent:#0369a1; --accent-ink:#fff; --focus:#1d4ed8; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:1rem 1.25rem; border-bottom:2px solid var(--line); background:var(--panel); }
+  h1 { font-size:1.25rem; margin:0 0 .25rem; } .sub { color:var(--muted); font-size:.9rem; margin:0; }
+  main { max-width:880px; margin:0 auto; padding:1.25rem; }
+  .banner { background:var(--panel-2); border:1px solid var(--line); border-left:4px solid var(--err); border-radius:8px; padding:.7rem .9rem; margin:0 0 1.25rem; font-size:.9rem; color:var(--ink); }
+  fieldset { border:1px solid var(--line); border-radius:10px; padding:1rem 1rem 1.25rem; margin:0 0 1.25rem; background:var(--panel); }
+  legend { padding:0 .5rem; font-weight:600; }
+  label { display:block; font-size:.82rem; color:var(--muted); margin:.6rem 0 .2rem; }
+  .req::after { content:" *"; color:var(--err); }
+  input,select,textarea,button { font:inherit; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:.55rem .7rem; }
+  input,select,textarea { width:100%; } textarea { min-height:4.5rem; resize:vertical; }
+  .row { display:flex; gap:.75rem; flex-wrap:wrap; } .row>div { flex:1 1 220px; min-width:0; }
+  .check { display:flex; align-items:flex-start; gap:.5rem; margin:.7rem 0 0; }
+  .check input { width:auto; min-height:auto; margin-top:.2rem; } .check label { margin:0; color:var(--ink); font-size:.95rem; }
+  button.primary { cursor:pointer; background:var(--accent); color:var(--accent-ink); border:none; font-weight:600; padding:.65rem 1.1rem; }
+  button.primary:hover { filter:brightness(1.08); } button[disabled] { opacity:.5; cursor:progress; }
+  :focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+  .status { margin:1rem 0 0; min-height:1.25rem; font-size:.95rem; } .status.err{color:var(--err);} .status.ok{color:var(--ok);}
+  .result { border:1px solid var(--line); border-left:4px solid var(--ok); border-radius:10px; padding:.9rem 1.1rem; margin:1rem 0 0; background:var(--panel); }
+  .result h2 { margin:0 0 .4rem; font-size:1.1rem; }
+  a { color:var(--accent); } code { background:var(--panel-2); padding:.05rem .35rem; border-radius:4px; }
+  details.raw { margin:.6rem 0 0; } details.raw summary { cursor:pointer; color:var(--muted); font-size:.85rem; }
+  pre { overflow:auto; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:.7rem; font-size:.78rem; }
+
+  /* ---- accessibility: high-contrast, large-text, reduced-motion, skip link ---- */
+  html.contrast-high { --bg:#000; --panel:#000; --panel-2:#0a0a0a; --ink:#fff; --muted:#fff; --line:#fff; --accent:#ffec3d; --accent-ink:#000; --focus:#ffec3d; --ok:#7cfc00; --warn:#ffd000; --err:#ff8a80; }
+  @media (prefers-contrast: more) { :root { --muted:#cbd5e1; --line:#64748b; } }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } button:hover { filter:none; } }
+  button { min-height:2.5rem; }
+  .skip-link { position:absolute; left:.5rem; top:-3rem; z-index:10; transition:top .15s; background:var(--accent); color:var(--accent-ink); padding:.55rem .8rem; border-radius:8px; font-weight:600; text-decoration:none; }
+  .skip-link:focus { top:.5rem; }
+  .a11y-bar { display:flex; gap:.4rem; align-items:center; margin-top:.6rem; flex-wrap:wrap; }
+  .a11y-bar .lbl { color:var(--muted); font-size:.78rem; }
+  .a11y-bar button { min-height:2.25rem; min-width:2.25rem; padding:.3rem .6rem; font-size:.85rem; background:var(--panel-2); color:var(--ink); border:1px solid var(--line); font-weight:600; }
+  .a11y-bar button[aria-pressed="true"] { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<header>
+  <h1>Registration intake demo</h1>
+  <p class="sub">Fill in a registration form and watch it become a linked FHIR record — a <strong>Patient</strong>, a <strong>QuestionnaireResponse</strong> (the intake answers), and a <strong>Consent</strong> — created in one request. Then read it back in the <a href="fhir-reader.html">record reader</a>.</p>
+  <div class="a11y-bar" role="group" aria-label="Display settings">
+    <span class="lbl">Text size</span>
+    <button id="textSmaller" type="button" aria-label="Decrease text size">A−</button>
+    <button id="textReset" type="button" aria-label="Reset text size to default">A</button>
+    <button id="textBigger" type="button" aria-label="Increase text size">A＋</button>
+    <button id="contrastBtn" type="button" aria-pressed="false">High contrast</button>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+  <p class="banner" role="note">
+    <strong>Test servers only.</strong> This page <em>writes</em> data (HTTP POST). Only run it against an open test server like
+    HAPI. <strong>Never enter a real person's information and never point it at a real CureMD tenant</strong> — CureMD's FHIR
+    application programming interface is read-only anyway, so writes there would simply fail. This is a demonstration of how
+    structured intake maps to FHIR, not a production intake form. Use obviously fake names (the form is pre-filled with one).
+  </p>
+
+  <form id="intakeForm" novalidate>
+    <fieldset>
+      <legend>Person</legend>
+      <div class="row">
+        <div>
+          <label class="req" for="given">First name</label>
+          <input id="given" name="given" type="text" autocomplete="off" required value="Pat Demo">
+        </div>
+        <div>
+          <label class="req" for="family">Last name</label>
+          <input id="family" name="family" type="text" autocomplete="off" required value="Sample">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label class="req" for="birthDate">Date of birth</label>
+          <input id="birthDate" name="birthDate" type="date" required value="1958-09-30">
+        </div>
+        <div>
+          <label for="gender">Administrative gender</label>
+          <select id="gender" name="gender">
+            <option value="female">female</option>
+            <option value="male">male</option>
+            <option value="other">other</option>
+            <option value="unknown">unknown</option>
+          </select>
+        </div>
+        <div>
+          <label for="language">Preferred language</label>
+          <input id="language" name="language" type="text" value="English">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact</legend>
+      <div class="row">
+        <div><label for="phone">Phone</label><input id="phone" name="phone" type="tel" value="555-0123"></div>
+        <div><label for="email">Email</label><input id="email" name="email" type="email" value="pat.demo@example.org"></div>
+      </div>
+      <div class="row">
+        <div style="flex:2 1 260px;"><label for="street">Street</label><input id="street" name="street" type="text" value="500 Test Street"></div>
+        <div><label for="city">City</label><input id="city" name="city" type="text" value="Milwaukee"></div>
+        <div style="flex:0 1 90px;"><label for="state">State</label><input id="state" name="state" type="text" value="WI"></div>
+        <div style="flex:0 1 120px;"><label for="postalCode">Postal code</label><input id="postalCode" name="postalCode" type="text" value="53202"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Intake questions</legend>
+      <label for="reason">Reason for visit</label>
+      <textarea id="reason" name="reason">Annual low-vision evaluation and referral.</textarea>
+
+      <label for="format">Preferred accessible format for communications</label>
+      <select id="format" name="format">
+        <option value="Standard print">Standard print</option>
+        <option value="Large print" selected>Large print</option>
+        <option value="Braille">Braille</option>
+        <option value="Audio">Audio</option>
+        <option value="Electronic / screen-reader friendly">Electronic / screen-reader friendly</option>
+      </select>
+
+      <div class="check">
+        <input id="interpreter" name="interpreter" type="checkbox">
+        <label for="interpreter">An interpreter is needed for appointments</label>
+      </div>
+      <div class="check">
+        <input id="transport" name="transport" type="checkbox" checked>
+        <label for="transport">Assistance with transportation is needed</label>
+      </div>
+      <div class="check">
+        <input id="consent" name="consent" type="checkbox" required>
+        <label class="req" for="consent">I consent to treatment (this records a FHIR <code>Consent</code> resource)</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Target server</legend>
+      <label for="baseUrl">FHIR base URL (must be writable)</label>
+      <input id="baseUrl" name="baseUrl" type="url" value="https://hapi.fhir.org/baseR4">
+      <p style="margin-top:1rem;">
+        <button id="submitBtn" class="primary" type="submit">Register (create FHIR record)</button>
+      </p>
+    </fieldset>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <section id="result" aria-live="polite"></section>
+  </form>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const uuid = () => (self.crypto && self.crypto.randomUUID ? self.crypto.randomUUID()
+    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==="x"?r:(r&0x3|0x8)).toString(16); }));
+  const val = (id) => $(id).value.trim();
+  const checked = (id) => $(id).checked;
+  function setStatus(msg, kind) { const s = $("status"); s.textContent = msg; s.className = "status" + (kind ? " " + kind : ""); }
+
+  // --- form values -> a FHIR transaction Bundle (Patient + QuestionnaireResponse + Consent) ---
+  // urn:uuid references let one POST create the patient and wire the intake answers
+  // and consent to that same patient atomically.
+  function buildBundle() {
+    const patUuid = uuid();
+    const pid = "urn:uuid:" + patUuid;
+    const cc = (text) => ({ text });
+    const entry = [];
+    const add = (resource, type) => entry.push({ fullUrl: "urn:uuid:" + uuid(), resource, request: { method: "POST", url: type } });
+
+    const telecom = [];
+    if (val("phone")) telecom.push({ system: "phone", value: val("phone") });
+    if (val("email")) telecom.push({ system: "email", value: val("email") });
+    const addressLine = val("street");
+    const address = (addressLine || val("city") || val("state") || val("postalCode"))
+      ? [{ line: addressLine ? [addressLine] : undefined, city: val("city") || undefined, state: val("state") || undefined, postalCode: val("postalCode") || undefined }]
+      : undefined;
+
+    entry.push({
+      fullUrl: pid,
+      resource: {
+        resourceType: "Patient",
+        identifier: [{ system: "urn:fhir-reader-demo", value: patUuid }],
+        name: [{ family: val("family"), given: val("given") ? val("given").split(/\s+/) : undefined }],
+        gender: val("gender"),
+        birthDate: val("birthDate"),
+        telecom: telecom.length ? telecom : undefined,
+        address,
+        communication: val("language") ? [{ language: cc(val("language")), preferred: true }] : undefined
+      },
+      request: { method: "POST", url: "Patient" }
+    });
+
+    // The intake answers as a QuestionnaireResponse — the structured form record.
+    const items = [
+      { linkId: "reason", text: "Reason for visit", answer: val("reason") ? [{ valueString: val("reason") }] : undefined },
+      { linkId: "format", text: "Preferred accessible format for communications", answer: [{ valueString: val("format") }] },
+      { linkId: "interpreter", text: "Interpreter needed", answer: [{ valueBoolean: checked("interpreter") }] },
+      { linkId: "transport", text: "Transportation assistance needed", answer: [{ valueBoolean: checked("transport") }] }
+    ].filter(i => i.answer);
+    add({
+      resourceType: "QuestionnaireResponse",
+      status: "completed",
+      subject: { reference: pid },
+      authored: "2026-06-24T12:00:00Z",
+      item: items
+    }, "QuestionnaireResponse");
+
+    // The consent-to-treat checkbox as a FHIR Consent resource.
+    if (checked("consent")) add({
+      resourceType: "Consent",
+      status: "active",
+      scope: { coding: [{ system: "http://terminology.hl7.org/CodeSystem/consentscope", code: "treatment" }] },
+      category: [{ coding: [{ system: "http://loinc.org", code: "59284-0", display: "Consent Document" }] }],
+      patient: { reference: pid },
+      dateTime: "2026-06-24T12:00:00Z",
+      policyRule: { text: "Consent to treatment captured at registration (demonstration)" }
+    }, "Consent");
+
+    return { resourceType: "Bundle", type: "transaction", entry };
+  }
+
+  const base = () => val("baseUrl").replace(/\/+$/, "");
+
+  async function submit(event) {
+    event.preventDefault();
+    $("result").innerHTML = "";
+    if (!val("given") || !val("family") || !val("birthDate")) {
+      setStatus("First name, last name, and date of birth are required.", "err"); return;
+    }
+    if (!checked("consent")) { setStatus("Consent to treatment is required to register.", "err"); return; }
+
+    const btn = $("submitBtn");
+    btn.disabled = true;
+    setStatus("Creating FHIR record…");
+    const bundle = buildBundle();
+    try {
+      const res = await fetch(base(), {
+        method: "POST",
+        headers: { "Content-Type": "application/fhir+json", "Accept": "application/fhir+json" },
+        body: JSON.stringify(bundle)
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status + " — " + res.statusText);
+      const out = await res.json();
+      const patientEntry = (out.entry || []).find(e => /Patient\/\w/.test((e.response && e.response.location) || ""));
+      const loc = (patientEntry && patientEntry.response.location) || "";
+      const m = loc.match(/Patient\/([^/]+)/);
+      const id = m ? m[1] : "(created)";
+      const made = (out.entry || []).map(e => (e.response && e.response.location || "").split("/_history")[0]).filter(Boolean);
+      $("result").innerHTML =
+        `<div class="result">
+          <h2 tabindex="-1">Registered — record created</h2>
+          <p>Patient <code>${id}</code> and ${made.length} resource(s) were created on the test server.</p>
+          <p>Open the <a href="fhir-reader.html">record reader</a> (same default server) and load patient id <code>${id}</code>,
+             or search the last name to see the intake answers and consent on the chart.</p>
+          <details class="raw"><summary>Show the FHIR transaction bundle that was sent</summary><pre>${escapeHtml(JSON.stringify(bundle, null, 2))}</pre></details>
+        </div>`;
+      const h = $("result").querySelector("h2"); if (h) h.focus();
+      setStatus("Done.", "ok");
+    } catch (e) {
+      setStatus("Registration failed: " + e.message, "err");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  $("intakeForm").addEventListener("submit", submit);
+
+  // ---- accessibility controls (text size + high contrast, remembered) -------
+  // Settings persist across all three tools via shared localStorage keys.
+  (function initDisplaySettings() {
+    const root = document.documentElement;
+    const SCALE_KEY = "fhir-tools-text-scale", CONTRAST_KEY = "fhir-tools-contrast";
+    const clamp = (v) => Math.min(1.6, Math.max(0.85, Math.round(v * 100) / 100));
+    let scale = clamp(parseFloat(localStorage.getItem(SCALE_KEY)) || 1);
+    const applyScale = () => { root.style.fontSize = Math.round(scale * 100) + "%"; };
+    const setScale = (next) => { scale = clamp(next); applyScale(); localStorage.setItem(SCALE_KEY, String(scale)); };
+    const setContrast = (on) => {
+      root.classList.toggle("contrast-high", on);
+      $("contrastBtn").setAttribute("aria-pressed", String(on));
+      localStorage.setItem(CONTRAST_KEY, on ? "1" : "0");
+    };
+    applyScale();
+    setContrast(localStorage.getItem(CONTRAST_KEY) === "1");
+    $("textSmaller").addEventListener("click", () => setScale(scale - 0.15));
+    $("textReset").addEventListener("click", () => setScale(1));
+    $("textBigger").addEventListener("click", () => setScale(scale + 0.15));
+    $("contrastBtn").addEventListener("click", () => setContrast(!root.classList.contains("contrast-high")));
+  })();
+})();
+</script>
+</body>
+</html>

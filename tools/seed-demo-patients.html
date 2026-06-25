@@ -32,15 +32,35 @@
   .ok-tag { color:var(--ok); } .err-tag { color:var(--err); }
   a { color:var(--accent); } code { background:var(--panel-2); padding:.05rem .35rem; border-radius:4px; }
   .preview { color:var(--muted); font-size:.8rem; margin:.3rem 0 0; }
+
+  /* ---- accessibility: high-contrast, large-text, reduced-motion, skip link ---- */
+  html.contrast-high { --bg:#000; --panel:#000; --panel-2:#0a0a0a; --ink:#fff; --muted:#fff; --line:#fff; --accent:#ffec3d; --accent-ink:#000; --focus:#ffec3d; --ok:#7cfc00; --warn:#ffd000; --err:#ff8a80; }
+  @media (prefers-contrast: more) { :root { --muted:#cbd5e1; --line:#64748b; } }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } button:hover { filter:none; } }
+  button { min-height:2.5rem; }
+  .skip-link { position:absolute; left:.5rem; top:-3rem; z-index:10; transition:top .15s; background:var(--accent); color:var(--accent-ink); padding:.55rem .8rem; border-radius:8px; font-weight:600; text-decoration:none; }
+  .skip-link:focus { top:.5rem; }
+  .a11y-bar { display:flex; gap:.4rem; align-items:center; margin-top:.6rem; flex-wrap:wrap; }
+  .a11y-bar .lbl { color:var(--muted); font-size:.78rem; }
+  .a11y-bar button { min-height:2.25rem; min-width:2.25rem; padding:.3rem .6rem; font-size:.85rem; background:var(--panel-2); color:var(--ink); border:1px solid var(--line); font-weight:600; }
+  .a11y-bar button[aria-pressed="true"] { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to main content</a>
 <header>
   <h1>Seed demo patients</h1>
   <p class="sub">Populate a FHIR test server with rich synthetic patients, then read them in the <a href="fhir-reader.html">record reader</a>.</p>
+  <div class="a11y-bar" role="group" aria-label="Display settings">
+    <span class="lbl">Text size</span>
+    <button id="textSmaller" type="button" aria-label="Decrease text size">A−</button>
+    <button id="textReset" type="button" aria-label="Reset text size to default">A</button>
+    <button id="textBigger" type="button" aria-label="Increase text size">A＋</button>
+    <button id="contrastBtn" type="button" aria-pressed="false">High contrast</button>
+  </div>
 </header>
 
-<main>
+<main id="main" tabindex="-1">
   <p class="banner" role="note">
     <strong>Test servers only.</strong> This page <em>writes</em> data (HTTP POST). Only run it against an open test server like
     HAPI. <strong>Never point it at a real CureMD tenant or any server holding real patients</strong> — and CureMD's FHIR API is
@@ -250,6 +270,28 @@
   }
 
   $("seedBtn").addEventListener("click", seed);
+
+  // ---- accessibility controls (text size + high contrast, remembered) -------
+  // Settings persist across all three tools via shared localStorage keys.
+  (function initDisplaySettings() {
+    const root = document.documentElement;
+    const SCALE_KEY = "fhir-tools-text-scale", CONTRAST_KEY = "fhir-tools-contrast";
+    const clamp = (v) => Math.min(1.6, Math.max(0.85, Math.round(v * 100) / 100));
+    let scale = clamp(parseFloat(localStorage.getItem(SCALE_KEY)) || 1);
+    const applyScale = () => { root.style.fontSize = Math.round(scale * 100) + "%"; };
+    const setScale = (next) => { scale = clamp(next); applyScale(); localStorage.setItem(SCALE_KEY, String(scale)); };
+    const setContrast = (on) => {
+      root.classList.toggle("contrast-high", on);
+      $("contrastBtn").setAttribute("aria-pressed", String(on));
+      localStorage.setItem(CONTRAST_KEY, on ? "1" : "0");
+    };
+    applyScale();
+    setContrast(localStorage.getItem(CONTRAST_KEY) === "1");
+    $("textSmaller").addEventListener("click", () => setScale(scale - 0.15));
+    $("textReset").addEventListener("click", () => setScale(1));
+    $("textBigger").addEventListener("click", () => setScale(scale + 0.15));
+    $("contrastBtn").addEventListener("click", () => setContrast(!root.classList.contains("contrast-high")));
+  })();
 })();
 </script>
 </body>
